@@ -8,6 +8,7 @@
 .brand-mark {
   width: 32px; height: 32px; border-radius: 8px; background: var(--accent);
   display: flex; align-items: center; justify-content: center; color: #06231c; font-weight: 800; font-family: var(--font-display);
+  flex-shrink: 0;
 }
 .brand-name { font-family: var(--font-display); font-weight: 700; font-size: 15px; line-height: 1.1; }
 .brand-sub { font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; }
@@ -29,18 +30,22 @@
 .user-avatar {
   width: 30px; height: 30px; border-radius: 50%; background: var(--panel-raised);
   display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; color: var(--accent);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border); flex-shrink: 0;
 }
 .user-name { font-size: 13px; font-weight: 600; }
 .user-role { font-size: 11px; color: var(--text-muted); text-transform: capitalize; }
 
 .main-area { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .topbar {
-  height: 64px; border-bottom: 1px solid var(--border); display: flex; align-items: center;
-  justify-content: space-between; padding: 0 24px; background: var(--ink); position: sticky; top: 0; z-index: 10;
+  height: 60px; border-bottom: 1px solid var(--border); display: flex; align-items: center;
+  justify-content: space-between; gap: 12px; padding: 0 24px; background: var(--ink); position: sticky; top: 0; z-index: 10;
 }
 .page-title { font-family: var(--font-display); font-size: 18px; font-weight: 700; }
-.content { padding: 24px; flex: 1; }
+.content { padding: 24px; flex: 1; min-width: 0; }
+
+/* Mobile nav: hidden on desktop, shown as a topbar icon button under 900px */
+.mobile-nav-toggle { display: none; }
+.mobile-nav-overlay { display: none; }
 
 .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
 .kpi-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px; }
@@ -48,16 +53,29 @@
 .kpi-value { font-family: var(--font-display); font-size: 26px; font-weight: 700; }
 .kpi-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
 
+/* Generic two-column responsive layout — used for dashboard panels, wizard
+   review blocks, and anywhere else a simple side-by-side pair needs to
+   collapse to stacked on narrow screens. */
+.grid-2-responsive { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; }
+.grid-2-responsive.even { grid-template-columns: 1fr 1fr; }
+
 .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
 .toolbar .spacer { flex: 1; }
 
+/* Data tables: rather than squeezing columns illegibly on a phone, the
+   surrounding card scrolls horizontally and the table keeps a sane minimum
+   width. This is the standard, predictable pattern for dense admin tables
+   on small screens. */
+.card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table.data-table { min-width: 560px; }
+
 .modal-backdrop {
   position: fixed; inset: 0; background: rgba(6,10,18,0.7); display: flex; align-items: center;
-  justify-content: center; z-index: 100; padding: 20px;
+  justify-content: center; z-index: 100; padding: 16px;
 }
 .modal {
   background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg);
-  width: 100%; max-width: 520px; padding: 24px; max-height: 88vh; overflow-y: auto;
+  width: 100%; max-width: 520px; padding: 24px; max-height: 88vh; overflow-y: auto; overflow-x: auto;
 }
 .modal-title { font-family: var(--font-display); font-size: 17px; font-weight: 700; margin-bottom: 18px; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
@@ -65,12 +83,40 @@
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
 
 .toast {
-  position: fixed; bottom: 24px; right: 24px; background: var(--panel-raised); border: 1px solid var(--border);
+  position: fixed; bottom: 16px; right: 16px; left: 16px; background: var(--panel-raised); border: 1px solid var(--border);
   border-left: 4px solid var(--accent); padding: 14px 18px; border-radius: 10px; z-index: 200; font-size: 14px;
-  max-width: 340px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  max-width: 340px; margin-left: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
 }
 .toast.error { border-left-color: var(--danger); }
 
+/* ================= MOBILE (<= 900px) ================= */
 @media (max-width: 900px) {
-  .sidebar { display: none; }
+  .sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0; z-index: 60; width: 260px;
+    transform: translateX(-100%); transition: transform 0.2s ease; box-shadow: 24px 0 60px rgba(0,0,0,0.5);
+  }
+  .sidebar.open { transform: translateX(0); }
+
+  .mobile-nav-toggle {
+    display: flex; align-items: center; justify-content: center; width: 38px; height: 38px;
+    border-radius: 9px; background: var(--panel-raised); border: 1px solid var(--border); color: var(--text);
+    font-size: 18px; flex-shrink: 0;
+  }
+  .mobile-nav-overlay {
+    display: block; position: fixed; inset: 0; background: rgba(6,10,18,0.6); z-index: 55;
+  }
+
+  .content { padding: 16px; }
+  .topbar { padding: 0 16px; }
+  .kpi-grid { gap: 12px; }
+  table.data-table { min-width: 480px; }
+}
+
+@media (max-width: 640px) {
+  .form-grid:not(.single) { grid-template-columns: 1fr; }
+  .grid-2-responsive { grid-template-columns: 1fr; }
+  .modal { padding: 18px; }
+  .page-title { font-size: 16px; }
+  .kpi-value { font-size: 22px; }
+  .toast { left: 12px; right: 12px; bottom: 12px; max-width: none; }
 }

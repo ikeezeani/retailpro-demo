@@ -27,8 +27,8 @@ export default function Login() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle at 80% 20%, #132038 0%, var(--ink) 55%)' }}>
-      <form onSubmit={submit} style={{ width: 360, background: 'var(--panel)', border: '1px solid var(--border)', borderRadius: 18, padding: 30, boxShadow: '0 30px 80px rgba(0,0,0,0.45)' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'radial-gradient(circle at 80% 20%, #132038 0%, var(--ink) 55%)' }}>
+      <form onSubmit={submit} style={{ width: '100%', maxWidth: 360, background: 'var(--panel)', border: '1px solid var(--border)', borderRadius: 18, padding: 30, boxShadow: '0 30px 80px rgba(0,0,0,0.45)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 26 }}>
           <div className="brand-mark" style={{ width: 36, height: 36, fontSize: 16 }}>R</div>
           <div>

@@ -20,7 +20,7 @@ export default function Dashboard() {
         <Kpi label="Low Stock Items" value={data.lowStockCount} warn={data.lowStockCount > 0} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 16 }}>
+      <div className="grid-2-responsive">
         <div className="card">
           <h3 style={{ marginBottom: 16 }}>Last 7 Days</h3>
           <ResponsiveContainer width="100%" height={260}>

@@ -110,18 +110,22 @@ export default function Purchasing() {
           </div>
 
           <label className="field-label">Line Items</label>
-          {lines.map((l, i) => (
-            <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 0.7fr 0.9fr 0.7fr auto', gap: 8, marginBottom: 8 }}>
-              <select className="input" value={l.product_id} onChange={e => updateLine(i, 'product_id', e.target.value)}>
-                <option value="">Product…</option>
-                {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
-              <input className="input" type="number" placeholder="Qty" value={l.qty} onChange={e => updateLine(i, 'qty', e.target.value)} />
-              <input className="input" type="number" step="0.01" placeholder="Unit Cost" value={l.unit_cost} onChange={e => updateLine(i, 'unit_cost', e.target.value)} />
-              <input className="input" type="number" step="0.01" placeholder="Tax %" value={l.tax_rate} onChange={e => updateLine(i, 'tax_rate', e.target.value)} />
-              <button className="btn btn-danger" onClick={() => removeLine(i)}>×</button>
+          <div style={{ overflowX: 'auto', paddingBottom: 4 }}>
+            <div style={{ minWidth: 520 }}>
+              {lines.map((l, i) => (
+                <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 0.7fr 0.9fr 0.7fr auto', gap: 8, marginBottom: 8 }}>
+                  <select className="input" value={l.product_id} onChange={e => updateLine(i, 'product_id', e.target.value)}>
+                    <option value="">Product…</option>
+                    {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                  <input className="input" type="number" placeholder="Qty" value={l.qty} onChange={e => updateLine(i, 'qty', e.target.value)} />
+                  <input className="input" type="number" step="0.01" placeholder="Unit Cost" value={l.unit_cost} onChange={e => updateLine(i, 'unit_cost', e.target.value)} />
+                  <input className="input" type="number" step="0.01" placeholder="Tax %" value={l.tax_rate} onChange={e => updateLine(i, 'tax_rate', e.target.value)} />
+                  <button className="btn btn-danger" onClick={() => removeLine(i)}>×</button>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
           <button className="btn" onClick={addLine} style={{ marginBottom: 14 }}>+ Add Line</button>
 
           <div style={{ textAlign: 'right', fontWeight: 700, marginBottom: 14 }}>Total: <span className="mono">{formatMoney(total)}</span></div>

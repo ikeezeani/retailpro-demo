@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext.jsx';
 
@@ -39,10 +39,17 @@ export default function Layout({ children }) {
   const { user, logout } = useApp();
   const nav = useNavigate();
   const loc = useLocation();
+  const [navOpen, setNavOpen] = useState(false);
+
+  // Close the mobile drawer automatically whenever the route changes, so
+  // tapping a link doesn't leave the menu covering the new page.
+  useEffect(() => { setNavOpen(false); }, [loc.pathname]);
 
   return (
     <div className="app-shell">
-      <aside className="sidebar">
+      {navOpen && <div className="mobile-nav-overlay" onClick={() => setNavOpen(false)} />}
+
+      <aside className={`sidebar${navOpen ? ' open' : ''}`}>
         <div className="brand">
           <div className="brand-mark">R</div>
           <div>
@@ -82,7 +89,9 @@ export default function Layout({ children }) {
 
       <div className="main-area">
         <div className="topbar">
+          <button className="mobile-nav-toggle" aria-label="Open menu" onClick={() => setNavOpen(true)}>☰</button>
           <div className="page-title">{TITLES[loc.pathname] || 'RetailPro'}</div>
+          <div style={{ width: 38 }} />
         </div>
         <div className="content">{children}</div>
       </div>

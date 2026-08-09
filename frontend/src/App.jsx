@@ -26,6 +26,8 @@ function Protected({ children }) {
   return <Layout>{children}</Layout>;
 }
 
+// Receipts render standalone (no sidebar) since they're meant to be printed
+// cleanly or opened in their own tab from POS/Sales History.
 function ProtectedBare({ children }) {
   const { user } = useApp();
   if (!user) return <Navigate to="/login" replace />;
@@ -34,6 +36,11 @@ function ProtectedBare({ children }) {
 
 export default function App() {
   const [installChecked, setInstallChecked] = useState(false);
+  // Default to "not installed" rather than "installed": if the status check
+  // fails (e.g. a cold-starting backend on a free host taking a moment to
+  // wake up), sending the user to the wizard is self-correcting — the wizard
+  // re-checks status itself and redirects to /login if already installed.
+  // The reverse default would strand users on a login screen with no way in.
   const [installed, setInstalled] = useState(false);
 
   useEffect(() => {
@@ -47,10 +54,12 @@ export default function App() {
           setInstallChecked(true);
         }
       } catch (e) {
+        // Likely a cold-starting backend (common on free-tier hosts) — retry
+        // a couple of times with a short delay before giving up.
         if (attemptsLeft > 0) {
           setTimeout(() => checkStatus(attemptsLeft - 1), 2000);
         } else if (!cancelled) {
-          setInstallChecked(true);
+          setInstallChecked(true); // fall through with the safe default above
         }
       }
     }

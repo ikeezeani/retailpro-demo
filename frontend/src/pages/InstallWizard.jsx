@@ -162,7 +162,7 @@ export default function InstallWizard() {
           {step === 4 && (
             <div>
               <h2 style={{ marginBottom: 14 }}>Review & Install</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
+              <div className="grid-2-responsive even" style={{ marginBottom: 20 }}>
                 <ReviewBlock title="Database" rows={[['Host', `${db.host}:${db.port}`], ['Database', db.database], ['User', db.username]]} />
                 <ReviewBlock title="Company" rows={[['Name', company.name], ['Currency', `${currency?.code} (${currency?.symbol})`], ['Tax Rate', `${taxRate}%`]]} />
                 <ReviewBlock title="Administrator" rows={[['Name', admin.name], ['Email', admin.email]]} />

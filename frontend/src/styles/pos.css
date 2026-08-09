@@ -1,4 +1,4 @@
-.pos-layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; height: calc(100vh - 64px - 48px); }
+.pos-layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; height: calc(100vh - 60px - 48px); }
 
 .pos-left { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 
@@ -69,3 +69,24 @@
   color: var(--text-muted); font-size: 12px; font-weight: 700; text-align: center;
 }
 .pay-method-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(35,196,160,0.1); }
+
+/* ================= MOBILE ================= */
+/* Below 960px there isn't room for the product grid and the receipt/checkout
+   panel side by side. Stack them instead: product grid on top (scrolls with
+   the page), receipt + checkout below it. The receipt panel gets a capped
+   height of its own so a long cart still scrolls internally rather than
+   pushing the checkout buttons off-screen. */
+@media (max-width: 960px) {
+  .pos-layout { grid-template-columns: 1fr; height: auto; gap: 16px; }
+  .pos-left { gap: 12px; }
+  .product-grid { overflow-y: visible; flex: none; max-height: 46vh; overflow-y: auto; }
+  .receipt-tape-wrap { height: auto; }
+  .receipt-items { max-height: 32vh; }
+  .pay-methods { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .product-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+  .scan-bar input { font-size: 14px; }
+  .pay-methods { grid-template-columns: 1fr 1fr; }
+}

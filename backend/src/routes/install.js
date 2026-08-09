@@ -51,6 +51,10 @@ router.post('/test-db', async (req, res) => {
   const { host, port, database, username, password } = req.body;
   try {
     const dialectOptions = {};
+    // Mirror the SSL behavior of the real connection (config/db.js) so the
+    // "Test Connection" check doesn't fail differently than the actual
+    // install step does — hosts like TiDB Cloud reject non-TLS connections
+    // outright, so this must match.
     if (process.env.DB_SSL === 'true') {
       dialectOptions.ssl = {
         minVersion: 'TLSv1.2',

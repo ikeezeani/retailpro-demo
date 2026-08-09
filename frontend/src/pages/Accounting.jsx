@@ -122,7 +122,7 @@ function Journal() {
             <div><label className="field-label">Memo</label><input className="input" value={memo} onChange={e => setMemo(e.target.value)} /></div>
           </div>
           {lines.map((l, i) => (
-            <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
+            <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 8, marginBottom: 8, minWidth: 380 }}>
               <select className="input" value={l.code} onChange={e => updateLine(i, 'code', e.target.value)}>
                 <option value="">Account…</option>
                 {accounts.map(a => <option key={a.id} value={a.code}>{a.code} — {a.name}</option>)}

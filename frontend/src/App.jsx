@@ -26,8 +26,6 @@ function Protected({ children }) {
   return <Layout>{children}</Layout>;
 }
 
-// Receipts render standalone (no sidebar) since they're meant to be printed
-// cleanly or opened in their own tab from POS/Sales History.
 function ProtectedBare({ children }) {
   const { user } = useApp();
   if (!user) return <Navigate to="/login" replace />;
@@ -36,13 +34,29 @@ function ProtectedBare({ children }) {
 
 export default function App() {
   const [installChecked, setInstallChecked] = useState(false);
-  const [installed, setInstalled] = useState(true);
+  const [installed, setInstalled] = useState(false);
 
   useEffect(() => {
-    client.get('/install/status').then(({ data }) => {
-      setInstalled(data.installed);
-      setInstallChecked(true);
-    }).catch(() => setInstallChecked(true));
+    let cancelled = false;
+
+    async function checkStatus(attemptsLeft) {
+      try {
+        const { data } = await client.get('/install/status');
+        if (!cancelled) {
+          setInstalled(data.installed);
+          setInstallChecked(true);
+        }
+      } catch (e) {
+        if (attemptsLeft > 0) {
+          setTimeout(() => checkStatus(attemptsLeft - 1), 2000);
+        } else if (!cancelled) {
+          setInstallChecked(true);
+        }
+      }
+    }
+
+    checkStatus(3);
+    return () => { cancelled = true; };
   }, []);
 
   if (!installChecked) return null;

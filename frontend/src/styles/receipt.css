@@ -1,0 +1,31 @@
+/* Screen preview: centers the receipt so it's easy to check before printing */
+.receipt-print {
+  max-width: 320px;
+  margin: 24px auto;
+  background: #fff;
+  color: #111;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  border-radius: 4px;
+}
+.rp-center { text-align: center; }
+.rp-bold { font-weight: 700; }
+.rp-lg { font-size: 14px; }
+.rp-small { font-size: 10px; color: #666; margin-top: 6px; }
+.rp-dash { border-top: 1px dashed #999; margin: 8px 0; }
+.rp-row { display: flex; justify-content: space-between; padding: 2px 0; }
+.rp-item { margin-bottom: 4px; }
+
+/* Actual thermal print output: 80mm roll width, no margins, no browser chrome */
+@media print {
+  body * { visibility: hidden; }
+  .receipt-print, .receipt-print * { visibility: visible; }
+  .receipt-print {
+    position: absolute; top: 0; left: 0; width: 80mm; max-width: 80mm;
+    box-shadow: none; margin: 0; padding: 4mm;
+  }
+  .no-print { display: none !important; }
+  @page { size: 80mm auto; margin: 0; }
+}

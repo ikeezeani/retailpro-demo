@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RetailPro 5.0 — Installation Guide &amp; User Manual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B1220; --panel:#121B2E; --panel-raised:#182338; --border:#24314A;
+    --text:#E7ECF5; --text-muted:#8C9AB5; --accent:#23C4A0; --accent-dim:#17836b;
+    --amber:#F0A63A; --danger:#EF5A5A; --paper:#F6F3E9; --paper-ink:#1B1B1B;
+    --font-display:'Space Grotesk',sans-serif; --font-body:'Inter',sans-serif; --font-mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--ink);color:var(--text);font-family:var(--font-body);line-height:1.6;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:var(--font-display);letter-spacing:-0.01em;margin:0 0 12px;}
+  p{margin:0 0 14px;color:var(--text);}
+  a{color:var(--accent);text-decoration:none;}
+  a:hover{text-decoration:underline;}
+  code{font-family:var(--font-mono);background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:0.9em;}
+  pre{background:#0A0F1A;border:1px solid var(--border);border-radius:10px;padding:16px 18px;overflow-x:auto;font-family:var(--font-mono);font-size:13px;line-height:1.6;margin:14px 0 18px;}
+  pre code{background:none;padding:0;}
+  ::selection{background:var(--accent);color:#06231c;}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+  /* ---------- Layout ---------- */
+  .shell{display:flex;max-width:1320px;margin:0 auto;}
+  .sidebar{
+    width:268px;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;
+    padding:28px 18px;border-right:1px solid var(--border);
+  }
+  .sidebar .brand{display:flex;align-items:center;gap:10px;margin-bottom:26px;padding:0 6px;}
+  .brand-mark{width:34px;height:34px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#06231c;font-weight:800;font-family:var(--font-display);flex-shrink:0;}
+  .brand-name{font-family:var(--font-display);font-weight:700;font-size:15px;line-height:1.15;}
+  .brand-sub{font-size:10px;color:var(--text-muted);letter-spacing:0.08em;text-transform:uppercase;}
+
+  .toc-group{margin-bottom:16px;}
+  .toc-label{font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);font-weight:700;padding:0 8px;margin-bottom:6px;}
+  .toc-link{display:block;padding:6px 8px;border-radius:7px;font-size:13px;color:var(--text-muted);font-weight:500;}
+  .toc-link:hover{color:var(--text);text-decoration:none;background:var(--panel-raised);}
+  .toc-link.active{color:var(--accent);background:rgba(35,196,160,0.1);font-weight:600;}
+
+  .main{flex:1;min-width:0;padding:0 0 100px;}
+  .content{max-width:840px;margin:0 auto;padding:0 48px;}
+  section{padding-top:56px;}
+  section:first-of-type{padding-top:0;}
+
+  /* ---------- Hero ---------- */
+  .hero{padding:72px 48px 56px;max-width:840px;margin:0 auto;position:relative;}
+  .eyebrow{font-family:var(--font-mono);font-size:12px;color:var(--accent);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:14px;}
+  .hero h1{font-size:44px;line-height:1.05;margin-bottom:16px;}
+  .hero .lede{font-size:17px;color:var(--text-muted);max-width:600px;margin-bottom:28px;}
+  .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:36px;}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border-radius:9px;border:1px solid var(--border);background:var(--panel-raised);color:var(--text);font-weight:600;font-size:14px;}
+  .btn:hover{border-color:var(--accent);text-decoration:none;}
+  .btn-primary{background:var(--accent);border-color:var(--accent);color:#06231c;}
+  .btn-primary:hover{background:#2ddcb4;}
+
+  .pill-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .pill{font-size:12px;font-weight:600;padding:6px 12px;border-radius:100px;border:1px solid var(--border);color:var(--text-muted);font-family:var(--font-mono);}
+
+  /* ---------- Receipt-tape divider: signature element carried over from the POS UI ---------- */
+  .tape-divider{margin:48px auto;max-width:520px;background:var(--paper);color:var(--paper-ink);border-radius:4px;font-family:var(--font-mono);font-size:12px;box-shadow:0 20px 50px rgba(0,0,0,0.35);overflow:hidden;}
+  .tape-torn{height:12px;background:linear-gradient(135deg,var(--paper) 50%,transparent 50%) 0 0/9px 12px repeat-x,linear-gradient(-135deg,var(--paper) 50%,transparent 50%) 0 0/9px 12px repeat-x;background-position:0 0,4.5px 0;}
+  .tape-body{padding:16px 20px;}
+  .tape-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed #d8d2bf;}
+  .tape-row:last-child{border-bottom:none;}
+  .tape-row .k{color:#6b6555;}
+  .tape-row .v{font-weight:600;}
+
+  /* ---------- Section chrome ---------- */
+  .section-eyebrow{font-family:var(--font-mono);font-size:11.5px;color:var(--accent);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;}
+  .section-title{font-size:28px;margin-bottom:8px;}
+  .section-intro{color:var(--text-muted);font-size:15px;margin-bottom:24px;max-width:640px;}
+  hr.rule{border:none;border-top:1px solid var(--border);margin:56px 0;}
+
+  /* ---------- Cards / callouts ---------- */
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px;}
+  .callout{border-left:3px solid var(--accent);background:rgba(35,196,160,0.06);border-radius:0 10px 10px 0;padding:14px 18px;margin:18px 0;font-size:14px;}
+  .callout.warn{border-left-color:var(--amber);background:rgba(240,166,58,0.08);}
+  .callout strong{color:var(--text);}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
+  @media (max-width:640px){.grid-2{grid-template-columns:1fr;}}
+
+  /* ---------- Numbered steps (real sequential processes only) ---------- */
+  .steps{counter-reset:step;list-style:none;padding:0;margin:0 0 22px;}
+  .step{position:relative;padding:0 0 28px 46px;counter-increment:step;}
+  .step::before{content:counter(step);position:absolute;left:0;top:0;width:32px;height:32px;border-radius:9px;background:var(--panel-raised);border:1px solid var(--border);color:var(--accent);font-family:var(--font-display);font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;}
+  .step::after{content:'';position:absolute;left:15px;top:34px;bottom:0;width:1px;background:var(--border);}
+  .step:last-child::after{display:none;}
+  .step h4{font-size:16px;margin-bottom:6px;}
+  .step p{font-size:14.5px;color:var(--text-muted);margin-bottom:8px;}
+
+  /* ---------- Tables ---------- */
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:12px 0 20px;}
+  th{text-align:left;padding:9px 12px;color:var(--text-muted);font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid var(--border);}
+  td{padding:11px 12px;border-bottom:1px solid var(--border);}
+  tr:last-child td{border-bottom:none;}
+
+  .badge{display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.03em;}
+  .badge-green{background:rgba(35,196,160,0.15);color:var(--accent);}
+  .badge-amber{background:rgba(240,166,58,0.15);color:var(--amber);}
+  .badge-muted{background:rgba(140,154,181,0.15);color:var(--text-muted);}
+
+  /* ---------- Feature grid ---------- */
+  .feature-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:20px;}
+  @media (max-width:640px){.feature-grid{grid-template-columns:1fr;}}
+  .feature{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px 20px;}
+  .feature .ico{font-size:20px;margin-bottom:8px;}
+  .feature h4{font-size:14.5px;margin-bottom:6px;}
+  .feature p{font-size:13.5px;color:var(--text-muted);margin:0;}
+
+  /* ---------- Payment method chips ---------- */
+  .pay-grid{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 22px;}
+  .pay-chip{display:flex;align-items:center;gap:8px;background:var(--panel-raised);border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:13.5px;font-weight:600;}
+  .pay-chip .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);}
+
+  .mono{font-family:var(--font-mono);}
+
+  /* ---------- Mobile ---------- */
+  .menu-toggle{display:none;}
+  @media (max-width:960px){
+    .sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-100%);transition:transform .2s ease;background:var(--ink);z-index:50;box-shadow:20px 0 60px rgba(0,0,0,0.5);}
+    .sidebar.open{transform:translateX(0);}
+    .menu-toggle{display:flex;position:fixed;top:16px;left:16px;z-index:60;width:42px;height:42px;border-radius:10px;background:var(--panel-raised);border:1px solid var(--border);color:var(--text);align-items:center;justify-content:center;font-size:18px;}
+    .hero{padding-top:88px;}
+    .content{padding:0 22px;}
+    .hero{padding-left:22px;padding-right:22px;}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important;}}
+</style>
+</head>
+<body>
+
+<button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation">☰</button>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">R</div>
+      <div>
+        <div class="brand-name">RetailPro 5.0</div>
+        <div class="brand-sub">Documentation</div>
+      </div>
+    </div>
+
+    <div class="toc-group">
+      <div class="toc-label">Installation Guide</div>
+      <a class="toc-link" href="#overview">Overview</a>
+      <a class="toc-link" href="#requirements">Requirements</a>
+      <a class="toc-link" href="#docker-install">Docker Installation</a>
+      <a class="toc-link" href="#manual-install">Manual Installation</a>
+      <a class="toc-link" href="#wizard">Installation Wizard</a>
+      <a class="toc-link" href="#demo-data">Loading Demo Data</a>
+      <a class="toc-link" href="#troubleshooting">Troubleshooting</a>
+    </div>
+
+    <div class="toc-group">
+      <div class="toc-label">User Manual</div>
+      <a class="toc-link" href="#signing-in">Signing In &amp; Roles</a>
+      <a class="toc-link" href="#pos">Point of Sale</a>
+      <a class="toc-link" href="#payments">Payment Options</a>
+      <a class="toc-link" href="#printing">Thermal Receipt Printing</a>
+      <a class="toc-link" href="#sales-history">Sales History</a>
+      <a class="toc-link" href="#products">Products &amp; Categories</a>
+      <a class="toc-link" href="#inventory">Inventory</a>
+      <a class="toc-link" href="#purchasing">Purchasing</a>
+      <a class="toc-link" href="#parties">Suppliers &amp; Customers</a>
+      <a class="toc-link" href="#accounting">Nominal Accounting</a>
+      <a class="toc-link" href="#users">Users</a>
+      <a class="toc-link" href="#settings">Settings &amp; Currency</a>
+      <a class="toc-link" href="#tips">Tips for Day One</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="hero">
+      <div class="eyebrow">RetailPro 5.0 · Documentation</div>
+      <h1>Everything you need to install, run, and sell with RetailPro.</h1>
+      <p class="lede">A single reference for setting up your store from a blank server to a working till — and for every module your staff will use once it's live.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#docker-install">Start Installing →</a>
+        <a class="btn" href="#pos">Jump to User Manual</a>
+      </div>
+      <div class="pill-row">
+        <span class="pill">POS + Barcode Scanning</span>
+        <span class="pill">Purchasing</span>
+        <span class="pill">Inventory</span>
+        <span class="pill">Nominal Accounting</span>
+        <span class="pill">Multi-Currency</span>
+        <span class="pill">Docker</span>
+      </div>
+    </div>
+
+    <div class="tape-divider">
+      <div class="tape-torn"></div>
+      <div class="tape-body">
+        <div class="tape-row"><span class="k">Frontend</span><span class="v">localhost:5175</span></div>
+        <div class="tape-row"><span class="k">Backend API</span><span class="v">localhost:5002</span></div>
+        <div class="tape-row"><span class="k">Database</span><span class="v">MySQL 8.0</span></div>
+        <div class="tape-row"><span class="k">First Run</span><span class="v">Installation Wizard</span></div>
+      </div>
+      <div class="tape-torn" style="transform:rotate(180deg)"></div>
+    </div>
+
+    <div class="content">
+
+      <!-- ============ OVERVIEW ============ -->
+      <section id="overview">
+        <div class="section-eyebrow">Part One — Installation</div>
+        <h2 class="section-title">Overview</h2>
+        <p class="section-intro">RetailPro ships as three containers — a React/Vite storefront, a Node.js/Express API, and MySQL — orchestrated with a single Docker Compose file. There's no manual database setup: a guided Installation Wizard handles your schema, chart of accounts, currency, and admin account the first time you open the app.</p>
+
+        <div class="feature-grid">
+          <div class="feature"><div class="ico">🛒</div><h4>POS with Barcode Scanning</h4><p>Any USB or Bluetooth scanner works out of the box — it types like a keyboard, RetailPro does the rest.</p></div>
+          <div class="feature"><div class="ico">📥</div><h4>Purchasing</h4><p>Raise purchase orders, receive goods, and watch stock and cost prices update automatically.</p></div>
+          <div class="feature"><div class="ico">📊</div><h4>Inventory</h4><p>Live stock levels, reorder alerts, manual adjustments, and a full movement audit trail.</p></div>
+          <div class="feature"><div class="ico">📒</div><h4>Nominal Accounting</h4><p>Real double-entry bookkeeping — every sale and purchase posts itself to the ledger.</p></div>
+        </div>
+      </section>
+
+      <!-- ============ REQUIREMENTS ============ -->
+      <section id="requirements">
+        <h3>Requirements</h3>
+        <div class="grid-2">
+          <div class="card">
+            <strong>For Docker installation (recommended)</strong>
+            <ul style="margin:10px 0 0;padding-left:18px;color:var(--text-muted);font-size:14px;">
+              <li>Docker Engine 24+ and Docker Compose v2</li>
+              <li>Ports <code>5175</code>, <code>5002</code>, <code>3306</code> free</li>
+              <li>2GB free RAM minimum</li>
+            </ul>
+          </div>
+          <div class="card">
+            <strong>For manual installation</strong>
+            <ul style="margin:10px 0 0;padding-left:18px;color:var(--text-muted);font-size:14px;">
+              <li>Node.js 20+</li>
+              <li>MySQL 8.0+ running locally</li>
+              <li>A database and user created in advance</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ DOCKER INSTALL ============ -->
+      <section id="docker-install">
+        <h3>Docker Installation</h3>
+        <p>This is the fastest path to a working store and the one most people should use.</p>
+
+        <ol class="steps">
+          <li class="step">
+            <h4>Get the project files</h4>
+            <p>Unzip the RetailPro folder onto your machine or server, then move into it.</p>
+            <pre><code>cd retailpro</code></pre>
+          </li>
+          <li class="step">
+            <h4>Build and start the stack</h4>
+            <p>This single command builds and starts all three containers — MySQL, the API, and the storefront.</p>
+            <pre><code>docker compose up -d --build</code></pre>
+            <p>Give MySQL 20–30 seconds on first boot to finish initializing. The backend waits on a health check automatically, so you don't need to time this yourself.</p>
+          </li>
+          <li class="step">
+            <h4>Open the app</h4>
+            <p>Visit the frontend in your browser. Since nothing is installed yet, you'll be redirected straight into the Installation Wizard.</p>
+            <pre><code>http://localhost:5175</code></pre>
+          </li>
+          <li class="step">
+            <h4>Complete the wizard</h4>
+            <p>Follow the six steps covered in <a href="#wizard">Installation Wizard</a> below — database, company &amp; currency, admin account, review, install.</p>
+          </li>
+          <li class="step">
+            <h4>(Optional) Load demo data</h4>
+            <p>See <a href="#demo-data">Loading Demo Data</a> to populate the store with realistic products, customers, and sales history.</p>
+          </li>
+        </ol>
+
+        <div class="callout">
+          <strong>Managing the stack</strong> — a few commands you'll use often:
+          <pre style="margin-top:10px;"><code>docker compose ps                 # see running containers
+docker compose logs -f backend    # tail backend logs
+docker compose down               # stop everything (data is preserved)
+docker compose down -v            # stop AND wipe all data — use with care</code></pre>
+          Your database and the installer's saved configuration live in named Docker volumes, so stopping and restarting the stack will <em>not</em> ask you to reinstall.
+        </div>
+      </section>
+
+      <!-- ============ MANUAL INSTALL ============ -->
+      <section id="manual-install">
+        <h3>Manual Installation <span class="badge badge-muted" style="margin-left:6px;">Development</span></h3>
+        <p>Useful for local development without Docker. You'll run the frontend and backend as two separate Node processes against a MySQL server already running on your machine.</p>
+
+        <ol class="steps">
+          <li class="step">
+            <h4>Create the database</h4>
+            <p>Connect to your local MySQL server and run:</p>
+            <pre><code>CREATE DATABASE retailpro;
+CREATE USER 'retailpro'@'localhost' IDENTIFIED BY 'retailpro';
+GRANT ALL PRIVILEGES ON retailpro.* TO 'retailpro'@'localhost';</code></pre>
+          </li>
+          <li class="step">
+            <h4>Start the backend</h4>
+            <pre><code>cd backend
+npm install
+npm run dev</code></pre>
+            <p>The API starts on <code class="mono">http://localhost:5002</code> and reports itself as "not installed" until the wizard runs.</p>
+          </li>
+          <li class="step">
+            <h4>Start the frontend</h4>
+            <p>In a second terminal:</p>
+            <pre><code>cd frontend
+npm install
+npm run dev</code></pre>
+            <p>Opens on <code class="mono">http://localhost:5175</code> and proxies API calls to the backend automatically.</p>
+          </li>
+          <li class="step">
+            <h4>Run the wizard</h4>
+            <p>Same steps as Docker — just use <code>host: localhost</code> instead of <code>host: mysql</code> on the database step.</p>
+          </li>
+        </ol>
+      </section>
+
+      <!-- ============ WIZARD ============ -->
+      <section id="wizard">
+        <h3>Installation Wizard — Step by Step</h3>
+        <p>The wizard runs once, the first time RetailPro starts with an empty database. Here's exactly what each screen asks for.</p>
+
+        <ol class="steps">
+          <li class="step">
+            <h4>Welcome</h4>
+            <p>A quick overview of what's about to happen and what you'll need. Click <strong>Get Started</strong>.</p>
+          </li>
+          <li class="step">
+            <h4>Database Connection</h4>
+            <p>Host, port, database name, username, and password. If you're using the bundled Docker Compose stack, the pre-filled defaults already match the bundled MySQL container — just click <strong>Test Connection</strong>.</p>
+            <table>
+              <tr><th>Field</th><th>Docker default</th></tr>
+              <tr><td>Host</td><td class="mono">mysql</td></tr>
+              <tr><td>Port</td><td class="mono">3306</td></tr>
+              <tr><td>Database</td><td class="mono">retailpro</td></tr>
+              <tr><td>Username</td><td class="mono">retailpro</td></tr>
+              <tr><td>Password</td><td class="mono">retailpro</td></tr>
+            </table>
+          </li>
+          <li class="step">
+            <h4>Company &amp; Currency</h4>
+            <p>Your company name, phone, email, and address — these appear on printed receipts. Then <strong>choose your currency</strong> from 15 built-in options (USD, EUR, GBP, NGN, GHS, KES, ZAR, INR, AED, CAD, AUD, JPY, CNY, BRL, EGP) and set your default sales tax rate. This currency is used everywhere — POS, invoices, reports — and can be changed later in Settings.</p>
+          </li>
+          <li class="step">
+            <h4>Admin Account</h4>
+            <p>The first login for your store — full access to every module, including user management and accounting. <strong>Write this password down somewhere safe</strong> before continuing; there's no self-service password reset yet.</p>
+          </li>
+          <li class="step">
+            <h4>Review &amp; Install</h4>
+            <p>A final summary of everything above. Clicking <strong>Install RetailPro 5.0</strong> creates every database table, seeds a standard chart of accounts, saves your settings, and creates your admin user.</p>
+          </li>
+          <li class="step">
+            <h4>Done</h4>
+            <p>Click <strong>Go to Login</strong> and sign in with the admin account you just created.</p>
+          </li>
+        </ol>
+      </section>
+
+      <!-- ============ DEMO DATA ============ -->
+      <section id="demo-data">
+        <h3>Loading Demo Data</h3>
+        <p>To explore RetailPro with a populated store instead of a blank install, run the seed script from a terminal:</p>
+        <pre><code>docker compose exec backend npm run seed</code></pre>
+        <p>This generates:</p>
+        <ul style="padding-left:20px;color:var(--text-muted);font-size:14.5px;">
+          <li>10 categories and 50 products — with barcodes ready to scan</li>
+          <li>5 suppliers and 12 customers</li>
+          <li>8 historical purchase orders (6 received into stock, 2 still pending)</li>
+          <li>Roughly 100–150 historical sales spread across the last 22 days, so the Dashboard, Accounting reports, and Inventory levels all look like an active store</li>
+        </ul>
+        <p>It also creates three extra staff logins so you can see how each role's access differs:</p>
+        <table>
+          <tr><th>Role</th><th>Email</th><th>Password</th></tr>
+          <tr><td><span class="badge badge-muted">Manager</span></td><td class="mono">manager@retailpro.demo</td><td class="mono">Demo1234!</td></tr>
+          <tr><td><span class="badge badge-muted">Cashier</span></td><td class="mono">cashier@retailpro.demo</td><td class="mono">Demo1234!</td></tr>
+          <tr><td><span class="badge badge-muted">Accountant</span></td><td class="mono">accountant@retailpro.demo</td><td class="mono">Demo1234!</td></tr>
+        </table>
+        <p style="font-size:13.5px;color:var(--text-muted);">The script is safe to re-run — it won't duplicate products, suppliers, or customers, and skips regenerating sales history if some already exists.</p>
+      </section>
+
+      <!-- ============ TROUBLESHOOTING ============ -->
+      <section id="troubleshooting">
+        <h3>Troubleshooting</h3>
+        <table>
+          <tr><th>Symptom</th><th>Fix</th></tr>
+          <tr><td>"Test Connection" fails in the wizard</td><td>Confirm MySQL is running and reachable. In Docker, the host must be <code>mysql</code> (the service name), not <code>localhost</code>.</td></tr>
+          <tr><td>Port already in use</td><td>Something else is using 5175, 5002, or 3306. Stop it, or change the host-side port mapping in <code>docker-compose.yml</code> (the container-side port can stay the same).</td></tr>
+          <tr><td>Stuck redirecting to <code>/install</code> after installing</td><td>Clear local storage for the site and refresh, or check <code>docker compose logs backend</code> for errors during install.</td></tr>
+          <tr><td>Forgot the admin password</td><td>Query <code>SELECT email FROM users;</code> via <code>docker compose exec mysql mysql ...</code> to confirm the email, then reset the hash directly — see the note below.</td></tr>
+          <tr><td>Need to start over completely</td><td><code>docker compose down -v</code> wipes the database and install state, then <code>docker compose up -d --build</code> to reinstall from scratch.</td></tr>
+        </table>
+        <div class="callout warn">
+          <strong>Resetting a lost password</strong> — there's no self-service reset flow yet. From a terminal:
+          <pre style="margin-top:10px;"><code>docker compose exec backend node -e "console.log(require('bcryptjs').hashSync('NewPass123!', 10))"
+docker compose exec mysql mysql -uretailpro -pretailpro retailpro \
+  -e "UPDATE users SET password_hash='&lt;PASTE_HASH&gt;' WHERE email='you@example.com';"</code></pre>
+        </div>
+      </section>
+
+      <hr class="rule" />
+
+      <!-- ============ USER MANUAL START ============ -->
+      <section id="signing-in">
+        <div class="section-eyebrow">Part Two — User Manual</div>
+        <h2 class="section-title">Signing In &amp; Roles</h2>
+        <p class="section-intro">Sign in with the email and password created during installation, or one issued to you by your administrator. The sidebar and available actions adapt automatically to your role.</p>
+        <table>
+          <tr><th>Role</th><th>Can do</th></tr>
+          <tr><td><span class="badge badge-muted">Cashier</span></td><td>Point of Sale, view Sales History</td></tr>
+          <tr><td><span class="badge badge-muted">Manager</span></td><td>Everything a Cashier can, plus Products, Categories, Inventory, Purchasing, Suppliers, Customers</td></tr>
+          <tr><td><span class="badge badge-muted">Accountant</span></td><td>Nominal Ledger (Chart of Accounts, Journal, reports), plus read access elsewhere</td></tr>
+          <tr><td><span class="badge badge-green">Admin</span></td><td>Everything, including Users and Settings</td></tr>
+        </table>
+      </section>
+
+      <!-- ============ POS ============ -->
+      <section id="pos">
+        <h2 class="section-title">Point of Sale</h2>
+        <p class="section-intro">This is the checkout screen your cashiers will live in all day.</p>
+
+        <div class="grid-2">
+          <div class="card">
+            <h4 style="font-size:15px;">Scanning items</h4>
+            <p style="font-size:14px;margin:0;">Click into the scan bar (auto-focused on open). Every standard USB/Bluetooth barcode scanner types like a keyboard — scanning a barcode types the code and presses Enter automatically, adding the matching product straight to the cart. No drivers needed.</p>
+          </div>
+          <div class="card">
+            <h4 style="font-size:15px;">Adding items manually</h4>
+            <p style="font-size:14px;margin:0;">Use the search box to filter by name or SKU, or click a product tile directly in the grid.</p>
+          </div>
+        </div>
+
+        <h4>The cart</h4>
+        <p>Every item you add appears on the receipt-style panel on the right, showing quantity, unit price, and line total. Use <strong>−</strong> / <strong>+</strong> to change quantity, or <strong>remove</strong> to delete a line.</p>
+
+        <h4>Completing a sale</h4>
+        <p>Choose a payment method (see <a href="#payments">Payment Options</a> below), enter amount received for cash sales, then click <strong>Charge</strong>. Stock is deducted instantly and the accounting entries — revenue, tax, and cost of goods sold — post automatically. A printable receipt opens right after checkout; see <a href="#printing">Thermal Receipt Printing</a>.</p>
+      </section>
+
+      <!-- ============ PAYMENTS ============ -->
+      <section id="payments">
+        <h3>Payment Options</h3>
+        <p>RetailPro supports five payment methods at checkout, on both the sales and purchasing sides:</p>
+        <div class="pay-grid">
+          <div class="pay-chip"><span class="dot"></span> Cash</div>
+          <div class="pay-chip"><span class="dot"></span> Card</div>
+          <div class="pay-chip"><span class="dot"></span> Mobile Money</div>
+          <div class="pay-chip"><span class="dot"></span> Bank Transfer</div>
+          <div class="pay-chip"><span class="dot"></span> On Credit</div>
+        </div>
+        <table>
+          <tr><th>Method</th><th>Behavior</th></tr>
+          <tr><td>Cash</td><td>Enter amount received — RetailPro calculates change due automatically.</td></tr>
+          <tr><td>Card / Mobile Money / Bank Transfer</td><td>Recorded as paid in full at the time of sale; posts to your Bank account in the ledger.</td></tr>
+          <tr><td>On Credit</td><td>Requires selecting a customer (sales) or supplier (purchases). The amount is added to their balance instead of being settled immediately, and posts to Accounts Receivable / Payable.</td></tr>
+        </table>
+      </section>
+
+      <!-- ============ PRINTING ============ -->
+      <section id="printing">
+        <h3>Thermal Receipt Printing</h3>
+        <p>Every completed sale automatically opens a print-formatted receipt sized for 80mm thermal paper. This uses your printer's normal Windows/Mac driver through the browser's print dialog — the same way any thermal receipt printer (Epson TM-series, Star, generic USB/Bluetooth models) is meant to be used.</p>
+        <ol class="steps">
+          <li class="step"><h4>Install your printer</h4><p>Plug in or pair your thermal printer and install its driver as usual — this comes from the printer manufacturer, not RetailPro.</p></li>
+          <li class="step"><h4>Set it as default (optional)</h4><p>In your OS printer settings, set the thermal printer as default so the print dialog pre-selects it automatically.</p></li>
+          <li class="step"><h4>Print</h4><p>Complete a sale — the receipt opens and the print dialog appears automatically. Confirm the correct printer is selected and print.</p></li>
+        </ol>
+        <p>You can also reprint any past invoice from <strong>Sales History → View → Print Receipt</strong>.</p>
+      </section>
+
+      <!-- ============ SALES HISTORY ============ -->
+      <section id="sales-history">
+        <h2 class="section-title">Sales History</h2>
+        <p class="section-intro">Every completed sale is listed with invoice number, date, customer, payment method, and total. Click <strong>View</strong> for the full line-item breakdown of any invoice, or <strong>Print Receipt</strong> to reprint it.</p>
+      </section>
+
+      <!-- ============ PRODUCTS ============ -->
+      <section id="products">
+        <h2 class="section-title">Products &amp; Categories</h2>
+        <p class="section-intro">Add and manage everything you sell.</p>
+        <table>
+          <tr><th>Field</th><th>Purpose</th></tr>
+          <tr><td>SKU</td><td>Your internal product code</td></tr>
+          <tr><td>Barcode</td><td>The number the scanner reads at the till</td></tr>
+          <tr><td>Cost Price / Sale Price</td><td>Drives profit and Cost of Goods Sold reporting automatically</td></tr>
+          <tr><td>Tax Rate</td><td>Applied per item at checkout</td></tr>
+          <tr><td>Reorder Level</td><td>When stock falls to or below this, it's flagged as low stock</td></tr>
+          <tr><td>Category / Unit</td><td>Organizes the POS product grid (pcs, kg, box, etc.)</td></tr>
+        </table>
+        <p style="font-size:13.5px;color:var(--text-muted);">Deactivating a product hides it from POS without deleting its sales history. Categories are simple groupings (e.g. Beverages, Snacks, Household) used to organize and filter products.</p>
+      </section>
+
+      <!-- ============ INVENTORY ============ -->
+      <section id="inventory">
+        <h2 class="section-title">Inventory</h2>
+        <div class="feature-grid">
+          <div class="feature"><h4>Stock levels</h4><p>Every active product with a badge showing In Stock or Reorder Soon.</p></div>
+          <div class="feature"><h4>Adjust</h4><p>Manually add or remove stock for counts, damage, theft, or corrections — with a required note for your audit trail.</p></div>
+          <div class="feature"><h4>History</h4><p>Full movement log per product: every sale, purchase receipt, and manual adjustment, in order.</p></div>
+          <div class="feature"><h4>Low stock filter</h4><p>Toggle to show only items at or below their reorder level.</p></div>
+        </div>
+      </section>
+
+      <!-- ============ PURCHASING ============ -->
+      <section id="purchasing">
+        <h2 class="section-title">Purchasing</h2>
+        <ol class="steps">
+          <li class="step">
+            <h4>Create the order</h4>
+            <p>Click <strong>New Purchase Order</strong>, choose a supplier and payment method, and add line items (product, quantity, unit cost, tax rate). The order is created as <strong>Ordered</strong> — stock is not affected yet.</p>
+          </li>
+          <li class="step">
+            <h4>Receive goods</h4>
+            <p>When goods physically arrive, click <strong>Receive Goods</strong>. This is the moment stock increases, product cost prices update to the latest purchase cost, and accounting entries post automatically — inventory asset, tax, and either cash/bank or accounts payable.</p>
+          </li>
+        </ol>
+      </section>
+
+      <!-- ============ PARTIES ============ -->
+      <section id="parties">
+        <h2 class="section-title">Suppliers &amp; Customers</h2>
+        <p class="section-intro">Basic contact records with a running balance: Suppliers show what you owe them from credit purchases (accounts payable); Customers show what they owe you from credit sales (accounts receivable).</p>
+      </section>
+
+      <!-- ============ ACCOUNTING ============ -->
+      <section id="accounting">
+        <h2 class="section-title">Nominal Accounting</h2>
+        <p class="section-intro">RetailPro keeps a full double-entry set of books behind every sale and purchase, so your accounts stay current without manual bookkeeping.</p>
+        <div class="feature-grid">
+          <div class="feature"><h4>Chart of Accounts</h4><p>Asset, liability, equity, income and expense accounts — a standard set is seeded at install, and you can add your own.</p></div>
+          <div class="feature"><h4>Journal</h4><p>Every transaction, automatic or manual, as balanced debit/credit lines. Use Manual Journal Entry for things RetailPro doesn't post automatically.</p></div>
+          <div class="feature"><h4>Trial Balance</h4><p>Total debits and credits per account — they must match.</p></div>
+          <div class="feature"><h4>Profit &amp; Loss / Balance Sheet</h4><p>Income minus expenses for the period, and a live check confirming Assets = Liabilities + Equity.</p></div>
+        </div>
+      </section>
+
+      <!-- ============ USERS ============ -->
+      <section id="users">
+        <h2 class="section-title">Users</h2>
+        <p class="section-intro">Administrators can create logins for staff and assign a role, or disable access for anyone who leaves — without deleting their sales history.</p>
+      </section>
+
+      <!-- ============ SETTINGS ============ -->
+      <section id="settings">
+        <h2 class="section-title">Settings &amp; Currency</h2>
+        <p class="section-intro">Update your company name, address, contact details, currency, default tax rate, and receipt footer at any time — changes apply immediately across the app.</p>
+        <div class="callout">
+          RetailPro is currency-agnostic: whichever currency you chose at install (or later in Settings) is used for every price, invoice, and report. There's no per-transaction conversion — RetailPro assumes your business operates in a single base currency.
+        </div>
+      </section>
+
+      <!-- ============ TIPS ============ -->
+      <section id="tips">
+        <h2 class="section-title">Tips for a Smooth First Day</h2>
+        <ul style="padding-left:20px;font-size:14.5px;color:var(--text-muted);">
+          <li style="margin-bottom:8px;">Add your <strong>Categories</strong> first, then your <strong>Products</strong> — it keeps the POS grid organized.</li>
+          <li style="margin-bottom:8px;">Enter accurate <strong>Cost Prices</strong> on every product — this drives your automatic Cost of Goods Sold and profit reporting.</li>
+          <li style="margin-bottom:8px;">Set sensible <strong>Reorder Levels</strong> so the Inventory page actually warns you before you run out.</li>
+          <li style="margin-bottom:8px;">Use <strong>On Credit</strong> payments sparingly and follow up via the Customers/Suppliers balance columns.</li>
+        </ul>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  // Mobile nav toggle
+  const sidebar = document.getElementById('sidebar');
+  const toggle = document.getElementById('menuToggle');
+  toggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+  document.querySelectorAll('.toc-link').forEach(l => l.addEventListener('click', () => sidebar.classList.remove('open')));
+
+  // Scroll-spy for active TOC link
+  const links = Array.from(document.querySelectorAll('.toc-link'));
+  const sections = links.map(l => document.querySelector(l.getAttribute('href'))).filter(Boolean);
+  const setActive = () => {
+    let current = sections[0];
+    const scrollPos = window.scrollY + 120;
+    for (const s of sections) { if (s.offsetTop <= scrollPos) current = s; }
+    links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + current.id));
+  };
+  document.addEventListener('scroll', setActive, { passive: true });
+  setActive();
+</script>
+</body>
+</html>

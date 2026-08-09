@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Learning to Use RetailPro — A Simple Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FBF8F0; --paper-line:#E4DDC8; --ink:#241F14; --ink-soft:#5B5340;
+    --accent:#0F9C7E; --accent-soft:#E3F5EF; --amber:#B9791A; --amber-soft:#FBF0DD;
+    --danger:#B4463C; --danger-soft:#FBEAE8; --card:#FFFFFF; --border:#EAE3CE;
+    --font-display:'Space Grotesk',sans-serif; --font-body:'Inter',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-body);font-size:16.5px;line-height:1.75;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:var(--font-display);letter-spacing:-0.01em;margin:0 0 12px;color:var(--ink);}
+  p{margin:0 0 16px;}
+  a{color:var(--accent);}
+  strong{color:var(--ink);}
+  ::selection{background:var(--accent);color:#fff;}
+  :focus-visible{outline:3px solid var(--accent);outline-offset:2px;}
+
+  /* ---------- Top bar ---------- */
+  .topbar{position:sticky;top:0;z-index:50;background:rgba(251,248,240,0.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--paper-line);}
+  .topbar-inner{max-width:760px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:14px;}
+  .brand-mark{width:34px;height:34px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-family:var(--font-display);flex-shrink:0;}
+  .brand-text{font-family:var(--font-display);font-weight:700;font-size:15px;}
+  .brand-text small{display:block;font-family:var(--font-body);font-weight:500;color:var(--ink-soft);font-size:12px;}
+  .quicknav{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;}
+  .qn{font-size:12px;font-weight:700;padding:7px 12px;border-radius:100px;background:#fff;border:1px solid var(--border);color:var(--ink-soft);}
+  .qn:hover{border-color:var(--accent);color:var(--accent);text-decoration:none;}
+  @media (max-width:760px){.quicknav{display:none;}}
+
+  .wrap{max-width:760px;margin:0 auto;padding:0 24px;}
+
+  /* ---------- Hero ---------- */
+  .hero{padding:56px 0 40px;text-align:center;}
+  .hero h1{font-size:36px;line-height:1.2;max-width:560px;margin:0 auto 16px;}
+  .hero p{font-size:18px;color:var(--ink-soft);max-width:480px;margin:0 auto 8px;}
+  .reassure{display:inline-flex;align-items:center;gap:8px;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:13.5px;padding:9px 18px;border-radius:100px;margin-top:18px;}
+
+  /* ---------- Sections ---------- */
+  section{padding:44px 0;border-top:1px solid var(--paper-line);}
+  section:first-of-type{border-top:none;}
+  .sec-num{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9px;background:var(--ink);color:var(--paper);font-family:var(--font-display);font-weight:700;font-size:14px;margin-right:10px;}
+  .sec-title{display:flex;align-items:center;font-size:25px;margin-bottom:6px;}
+  .sec-sub{color:var(--ink-soft);font-size:15.5px;margin-bottom:26px;max-width:560px;}
+
+  /* ---------- Numbered how-to steps ---------- */
+  .howto{list-style:none;padding:0;margin:0;counter-reset:howto;}
+  .howto li{position:relative;counter-increment:howto;padding:0 0 30px 50px;}
+  .howto li::before{content:counter(howto);position:absolute;left:0;top:0;width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;font-family:var(--font-display);font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;}
+  .howto li::after{content:'';position:absolute;left:16px;top:38px;bottom:0;width:2px;background:var(--paper-line);}
+  .howto li:last-child::after{display:none;}
+  .howto h4{font-size:17px;margin-bottom:6px;}
+  .howto p{font-size:15px;color:var(--ink-soft);margin-bottom:10px;}
+
+  /* ---------- Mock UI elements (show exactly what to look for) ---------- */
+  .mock{display:inline-flex;align-items:center;gap:8px;background:#12203B;color:#fff;font-family:var(--font-body);font-weight:700;font-size:13.5px;padding:9px 16px;border-radius:9px;margin:4px 4px 4px 0;}
+  .mock.green{background:var(--accent);}
+  .mock.outline{background:#fff;color:var(--ink);border:1.5px solid var(--border);}
+  .mock-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 14px;}
+  .mock-box{background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:16px 18px;margin:10px 0 14px;}
+
+  .tip{background:var(--accent-soft);border-radius:12px;padding:14px 18px;margin:14px 0;font-size:14.5px;}
+  .tip strong{color:var(--accent);}
+  .caution{background:var(--amber-soft);border-radius:12px;padding:14px 18px;margin:14px 0;font-size:14.5px;}
+  .caution strong{color:var(--amber);}
+
+  /* ---------- FAQ ---------- */
+  .faq-item{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:12px;}
+  .faq-q{font-weight:700;font-size:15.5px;margin-bottom:6px;display:flex;gap:10px;}
+  .faq-q .qmark{color:var(--accent);}
+  .faq-a{font-size:14.5px;color:var(--ink-soft);margin:0;}
+
+  /* ---------- Glossary ---------- */
+  .gloss{display:grid;grid-template-columns:150px 1fr;gap:6px 16px;font-size:14.5px;}
+  .gloss dt{font-weight:700;color:var(--ink);}
+  .gloss dd{margin:0 0 14px;color:var(--ink-soft);}
+
+  /* ---------- Footer ---------- */
+  footer{padding:50px 0 70px;text-align:center;color:var(--ink-soft);font-size:13.5px;}
+
+  @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand-mark">R</div>
+    <div class="brand-text">RetailPro <small>Everyday Guide</small></div>
+    <div class="quicknav">
+      <a class="qn" href="#sell">Making a Sale</a>
+      <a class="qn" href="#payments">Getting Paid</a>
+      <a class="qn" href="#stock">Checking Stock</a>
+      <a class="qn" href="#help">Common Problems</a>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>Learning to Use RetailPro</h1>
+    <p>A simple, step-by-step guide to using the till — written for people who have never used a computer program like this before.</p>
+    <div class="reassure">✓ No computer experience needed — just follow along</div>
+  </div>
+
+  <!-- ============ 1. STARTING ============ -->
+  <section id="start">
+    <h2 class="sec-title"><span class="sec-num">1</span>Opening RetailPro</h2>
+    <p class="sec-sub">Every time you start your shift, this is how you get to the till screen.</p>
+    <ol class="howto">
+      <li>
+        <h4>Turn on the computer or tablet</h4>
+        <p>Wait for it to fully switch on and show the normal desktop.</p>
+      </li>
+      <li>
+        <h4>Open the internet browser</h4>
+        <p>This is the app you use to look at websites — it might be called Chrome, Edge, or Firefox. Double-click its icon to open it.</p>
+      </li>
+      <li>
+        <h4>Go to the RetailPro address</h4>
+        <p>Your manager will have given you an address to type at the top of the browser (it will look something like <em>a web address</em>). If it's already saved as a shortcut, just click that instead.</p>
+        <div class="tip"><strong>Tip:</strong> Ask your manager to save this page as a shortcut on the desktop for you, so you never have to type anything to get started.</div>
+      </li>
+      <li>
+        <h4>Wait for the Sign In screen to appear</h4>
+        <p>You'll see a dark screen with the RetailPro name and two boxes — one for your email, one for your password.</p>
+      </li>
+    </ol>
+  </section>
+
+  <!-- ============ 2. SIGNING IN ============ -->
+  <section id="signin">
+    <h2 class="sec-title"><span class="sec-num">2</span>Signing In</h2>
+    <p class="sec-sub">Your manager will give you your own email and password. Keep these private — don't share them with other staff.</p>
+    <ol class="howto">
+      <li>
+        <h4>Click inside the box that says "Email"</h4>
+        <p>Type your email address exactly as your manager gave it to you.</p>
+      </li>
+      <li>
+        <h4>Click inside the box that says "Password"</h4>
+        <p>Type your password. The letters will show as dots to keep it private — that's normal. There's a small eye icon <span class="mock outline">👁</span> you can click if you want to check what you typed.</p>
+      </li>
+      <li>
+        <h4>Click the green Sign In button</h4>
+        <div class="mock-row"><span class="mock green">Sign In</span></div>
+        <p>If everything was typed correctly, you'll go straight to your main screen.</p>
+      </li>
+    </ol>
+    <div class="caution"><strong>If it says "Invalid email or password":</strong> Double-check you typed your email and password exactly right — capital letters matter. If it still doesn't work, ask your manager; only they can fix this for you.</div>
+  </section>
+
+  <!-- ============ 3. THE SCREEN ============ -->
+  <section id="layout">
+    <h2 class="sec-title"><span class="sec-num">3</span>Finding Your Way Around</h2>
+    <p class="sec-sub">Once you're signed in, here's what you're looking at.</p>
+    <div class="mock-box">
+      <p style="margin-bottom:10px;"><strong>On the left side</strong> of the screen is a list of everything you can do — this is called the menu. It might show things like:</p>
+      <div class="mock-row">
+        <span class="mock outline">🛒 Point of Sale</span>
+        <span class="mock outline">🧾 Sales History</span>
+        <span class="mock outline">📦 Products</span>
+      </div>
+      <p style="margin:14px 0 0;">You may not see every option — what you see depends on what your manager has allowed for your account. That's completely normal.</p>
+    </div>
+    <p><strong>At the top</strong> of the screen, you'll always see the name of the page you're currently on, so you always know where you are.</p>
+    <p>To go anywhere else, just click a different name in the left-side menu — you never need to use the browser's back button.</p>
+  </section>
+
+  <!-- ============ 4. MAKING A SALE ============ -->
+  <section id="sell">
+    <h2 class="sec-title"><span class="sec-num">4</span>Making a Sale</h2>
+    <p class="sec-sub">This is what you'll do the most, so take your time going through it once and it will quickly become second nature.</p>
+
+    <ol class="howto">
+      <li>
+        <h4>Click "Point of Sale" in the left menu</h4>
+        <p>This opens the till screen where you ring up customer purchases.</p>
+      </li>
+      <li>
+        <h4>Add the customer's items</h4>
+        <p>There are two ways to do this:</p>
+        <div class="mock-box">
+          <p style="margin-bottom:6px;"><strong>Scanning:</strong> Hold the item's barcode up to the scanner and wait for the beep. The item appears automatically — you don't need to click anything first.</p>
+          <p style="margin:0;"><strong>No scanner, or item won't scan:</strong> Type the product's name into the search box, or tap its picture in the grid on the screen.</p>
+        </div>
+      </li>
+      <li>
+        <h4>Check the list on the right side</h4>
+        <p>Every item you've added shows up on the receipt-shaped list on the right, along with its price. This updates every time you add something.</p>
+      </li>
+      <li>
+        <h4>If the customer wants more than one of something</h4>
+        <p>Find that item in the list and tap the small <span class="mock outline">+</span> button to add another one, or <span class="mock outline">−</span> to take one away.</p>
+      </li>
+      <li>
+        <h4>If you added something by mistake</h4>
+        <p>Find it in the list and tap the word <strong>remove</strong> next to it. It disappears from the sale completely.</p>
+      </li>
+      <li>
+        <h4>Ask the customer how they'd like to pay</h4>
+        <p>Continue to the next section, <a href="#payments">Getting Paid</a>, for exactly what to do for each payment type.</p>
+      </li>
+      <li>
+        <h4>Tap the big green Charge button at the bottom</h4>
+        <div class="mock-row"><span class="mock green">Charge $12.40</span></div>
+        <p>This finishes the sale. The amount shown on the button is always the full total the customer owes.</p>
+      </li>
+      <li>
+        <h4>Hand over the receipt and any change</h4>
+        <p>A receipt will print automatically if a receipt printer is connected. Give it to the customer along with any change owed.</p>
+      </li>
+      <li>
+        <h4>The screen clears itself</h4>
+        <p>You're now ready to start the next customer's sale — there's nothing extra you need to click.</p>
+      </li>
+    </ol>
+
+    <div class="caution">
+      <strong>Made a mistake after tapping Charge?</strong> Once a sale is completed, you can't undo it yourself. Speak to your manager — don't try to "fix" it by ringing up a second sale.
+    </div>
+  </section>
+
+  <!-- ============ 5. PAYMENTS ============ -->
+  <section id="payments">
+    <h2 class="sec-title"><span class="sec-num">5</span>Getting Paid</h2>
+    <p class="sec-sub">Before tapping Charge, tap the button that matches how the customer is paying.</p>
+    <div class="mock-row">
+      <span class="mock outline">Cash</span>
+      <span class="mock outline">Card</span>
+      <span class="mock outline">Mobile Money</span>
+      <span class="mock outline">Bank Transfer</span>
+      <span class="mock outline">On Credit</span>
+    </div>
+
+    <div class="mock-box">
+      <h4 style="font-size:15.5px;">💵 If the customer pays Cash</h4>
+      <p style="margin-bottom:0;">Tap <strong>Cash</strong>, then type the exact amount of money the customer handed you into the box that appears. The screen will instantly tell you how much change to give back — hand that amount to the customer along with the receipt.</p>
+    </div>
+
+    <div class="mock-box">
+      <h4 style="font-size:15.5px;">💳 If the customer pays by Card, Mobile Money, or Bank Transfer</h4>
+      <p style="margin-bottom:0;">Tap the matching button. Since the customer's payment machine or app handles the money itself, you don't need to type any amount — just complete their payment on that device as normal, then tap Charge here.</p>
+    </div>
+
+    <div class="mock-box">
+      <h4 style="font-size:15.5px;">📝 If the customer wants to pay later ("On Credit")</h4>
+      <p style="margin-bottom:0;">This should only be used if your manager allows it for trusted regular customers. Tap <strong>On Credit</strong>, then find and select the customer's name from the list. If their name isn't there, ask a manager to add them first.</p>
+    </div>
+  </section>
+
+  <!-- ============ 6. RECEIPTS ============ -->
+  <section id="receipts">
+    <h2 class="sec-title"><span class="sec-num">6</span>Reprinting a Receipt</h2>
+    <p class="sec-sub">If a customer loses their receipt or asks for another copy, you don't need to redo the sale.</p>
+    <ol class="howto">
+      <li>
+        <h4>Click "Sales History" in the left menu</h4>
+        <p>This shows every sale that's been made, most recent at the top.</p>
+      </li>
+      <li>
+        <h4>Find the sale</h4>
+        <p>Look for the date and time it happened, or the amount, to spot the right one.</p>
+      </li>
+      <li>
+        <h4>Click "View" next to it</h4>
+        <p>This opens the full details of that sale.</p>
+      </li>
+      <li>
+        <h4>Click "Print Receipt"</h4>
+        <div class="mock-row"><span class="mock green">🖨️ Print Receipt</span></div>
+        <p>A new copy will print, exactly like the original.</p>
+      </li>
+    </ol>
+  </section>
+
+  <!-- ============ 7. CHECKING STOCK ============ -->
+  <section id="stock">
+    <h2 class="sec-title"><span class="sec-num">7</span>Checking a Price or Stock Level</h2>
+    <p class="sec-sub">If a customer asks whether something is in stock, or you need to double-check a price without starting a sale.</p>
+    <ol class="howto">
+      <li>
+        <h4>Click "Products" or "Inventory" in the left menu</h4>
+        <p>Both show every item the store sells — Inventory focuses on how much stock is left.</p>
+      </li>
+      <li>
+        <h4>Type the item's name into the search box</h4>
+        <p>The list will narrow down as you type.</p>
+      </li>
+      <li>
+        <h4>Look at the colored label next to the item</h4>
+        <p>A green label means it's well stocked. An orange label saying <strong>"Reorder Soon"</strong> means stock is getting low — worth mentioning to your manager.</p>
+      </li>
+    </ol>
+  </section>
+
+  <!-- ============ 8. SIGNING OUT ============ -->
+  <section id="signout">
+    <h2 class="sec-title"><span class="sec-num">8</span>Signing Out</h2>
+    <p class="sec-sub">Always sign out when you finish your shift or step away from the till for a while — this keeps the store's sales and money information private and safe.</p>
+    <ol class="howto">
+      <li>
+        <h4>Look at the bottom of the left-side menu</h4>
+        <p>You'll see your name and a button underneath it.</p>
+      </li>
+      <li>
+        <h4>Click "Sign out"</h4>
+        <div class="mock-row"><span class="mock outline">Sign out</span></div>
+        <p>You'll be taken back to the Sign In screen, ready for the next person to log in with their own account.</p>
+      </li>
+    </ol>
+  </section>
+
+  <!-- ============ 9. COMMON PROBLEMS ============ -->
+  <section id="help">
+    <h2 class="sec-title"><span class="sec-num">9</span>Common Problems &amp; What To Do</h2>
+    <p class="sec-sub">Don't worry if something looks wrong — most problems have a simple fix.</p>
+
+    <div class="faq-item">
+      <div class="faq-q"><span class="qmark">?</span>The barcode scanner isn't adding anything when I scan</div>
+      <p class="faq-a">Make sure the scanner's cable is plugged in firmly, and try clicking into the search box at the top of the Point of Sale screen first, then scan again. If it still doesn't work, add the item by typing its name instead, and let your manager know the scanner needs checking.</p>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q"><span class="qmark">?</span>I can't find an item when I search for it</div>
+      <p class="faq-a">Try typing just the first word of its name, in case of a small spelling difference. If it still doesn't appear, the item may not have been added to the system yet — ask your manager.</p>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q"><span class="qmark">?</span>I forgot my password</div>
+      <p class="faq-a">You can't reset this yourself. Ask your administrator or manager to set you a new one.</p>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q"><span class="qmark">?</span>The receipt didn't print</div>
+      <p class="faq-a">Check that the printer is switched on and has paper. You can always print it again — go to Sales History, find the sale, click View, then Print Receipt.</p>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q"><span class="qmark">?</span>The screen looks frozen or stuck</div>
+      <p class="faq-a">Click the refresh/reload button in your browser (usually a circular arrow near the top of the screen), or press the F5 key on the keyboard. You will need to sign in again, but nothing will be lost.</p>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q"><span class="qmark">?</span>I don't see an option my manager told me I should have</div>
+      <p class="faq-a">What you can see depends on the type of account your manager set up for you. Ask them to check your account's role and adjust it if needed.</p>
+    </div>
+  </section>
+
+  <!-- ============ 10. GLOSSARY ============ -->
+  <section id="glossary">
+    <h2 class="sec-title"><span class="sec-num">10</span>Simple Word Guide</h2>
+    <p class="sec-sub">A few words you'll see on screen, explained plainly.</p>
+    <dl class="gloss">
+      <dt>Barcode</dt><dd>The stripy black-and-white pattern printed on a product that the scanner reads to identify it.</dd>
+      <dt>SKU</dt><dd>A short code the store uses to identify a product — like a nickname for it.</dd>
+      <dt>Till / POS</dt><dd>The screen where you ring up a customer's purchase — short for "Point of Sale."</dd>
+      <dt>Stock</dt><dd>How many of an item the store currently has available to sell.</dd>
+      <dt>Reorder Level</dt><dd>The point at which stock is considered low and needs restocking soon.</dd>
+      <dt>Supplier</dt><dd>A business the store buys products from.</dd>
+      <dt>Customer</dt><dd>A person who buys something from the store.</dd>
+      <dt>Invoice</dt><dd>Another word for a receipt — a record of what was bought and for how much.</dd>
+      <dt>On Credit</dt><dd>When a trusted customer takes items now and pays for them later.</dd>
+    </dl>
+  </section>
+
+  <footer>
+    RetailPro — Everyday Guide for Store Staff<br>
+    Keep this page bookmarked so you can come back to it any time.
+  </footer>
+</div>
+
+</body>
+</html>

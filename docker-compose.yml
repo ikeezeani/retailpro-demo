@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: retailpro_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: retailpro
+      MYSQL_USER: retailpro
+      MYSQL_PASSWORD: retailpro
+      MYSQL_ROOT_PASSWORD: retailpro_root
+    volumes:
+      - retailpro_mysql_data:/var/lib/mysql
+    ports:
+      # Host-side port 3307 avoids clashing with a MySQL install already running
+      # on the host machine. Containers still talk to each other on 3306 internally.
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uretailpro", "-pretailpro"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build: ./backend
+    container_name: retailpro_backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      PORT: 5002
+    volumes:
+      - retailpro_backend_data:/app/data
+    ports:
+      - "5002:5002"
+
+  frontend:
+    build: ./frontend
+    container_name: retailpro_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "5175:80"
+
+volumes:
+  retailpro_mysql_data:
+  retailpro_backend_data:

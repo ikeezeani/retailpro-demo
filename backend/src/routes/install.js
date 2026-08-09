@@ -50,8 +50,15 @@ router.get('/status', async (req, res) => {
 router.post('/test-db', async (req, res) => {
   const { host, port, database, username, password } = req.body;
   try {
+    const dialectOptions = {};
+    if (process.env.DB_SSL === 'true') {
+      dialectOptions.ssl = {
+        minVersion: 'TLSv1.2',
+        rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false',
+      };
+    }
     const testConn = new Sequelize(database, username, password, {
-      host, port: port || 3306, dialect: 'mysql', logging: false,
+      host, port: port || 3306, dialect: 'mysql', logging: false, dialectOptions,
     });
     await testConn.authenticate();
     await testConn.close();

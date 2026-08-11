@@ -53,17 +53,43 @@ async function postEntry({ date, memo, source, reference, lines }, t) {
   return entry;
 }
 
-/** Post the accounting impact of a completed POS sale. */
-async function postSaleEntry(sale, t) {
-  const isCredit = sale.payment_method === 'credit';
-  const receiptCode = isCredit
+/**
+ * Works out which ledger account(s) money for a sale/refund actually lands
+ * in or leaves from, given its payment method. Centralized here so sales
+ * and refunds can never disagree about where a "split" payment's cash vs.
+ * electronic portions go.
+ *
+ * direction: 'debit' for money coming in (a sale), 'credit' for money going
+ * back out (a refund/void).
+ */
+function receiptLines(paymentMethod, amount, splitCashAmount, splitElectronicAmount, direction) {
+  if (paymentMethod === 'split') {
+    const cash = Number(splitCashAmount || 0);
+    const electronic = Number(splitElectronicAmount || 0);
+    const declaredTotal = cash + electronic;
+    // Refunds may only be touching part of a split sale — scale each bucket
+    // proportionally to whatever fraction of the original total this
+    // particular amount represents, rather than assuming the full split.
+    const ratio = declaredTotal > 0 ? amount / declaredTotal : 0.5;
+    const cashPortion = declaredTotal > 0 ? cash * ratio : amount / 2;
+    const electronicPortion = amount - cashPortion;
+    return [
+      { code: SYSTEM_ACCOUNTS.CASH, [direction]: cashPortion },
+      { code: SYSTEM_ACCOUNTS.BANK, [direction]: electronicPortion },
+    ];
+  }
+  const code = paymentMethod === 'credit'
     ? SYSTEM_ACCOUNTS.ACCOUNTS_RECEIVABLE
-    : sale.payment_method === 'bank_transfer' || sale.payment_method === 'card'
+    : paymentMethod === 'bank_transfer' || paymentMethod === 'card'
     ? SYSTEM_ACCOUNTS.BANK
     : SYSTEM_ACCOUNTS.CASH;
+  return [{ code, [direction]: amount }];
+}
 
+/** Post the accounting impact of a completed POS sale. */
+async function postSaleEntry(sale, t) {
   const lines = [
-    { code: receiptCode, debit: sale.total, credit: 0 },
+    ...receiptLines(sale.payment_method, sale.total, sale.split_cash_amount, sale.split_electronic_amount, 'debit'),
     { code: SYSTEM_ACCOUNTS.SALES_REVENUE, debit: 0, credit: sale.subtotal - sale.discount },
     { code: SYSTEM_ACCOUNTS.SALES_TAX_PAYABLE, debit: 0, credit: sale.tax_total },
   ];
@@ -103,4 +129,37 @@ async function postPurchaseEntry(purchase, t) {
   );
 }
 
-module.exports = { SYSTEM_ACCOUNTS, postEntry, postSaleEntry, postCogsEntry, postPurchaseEntry, sequelize };
+/** Reverse the revenue/tax side of a sale for a refund or void — the exact
+ *  mirror image of postSaleEntry, for whatever portion is being returned. */
+async function postRefundEntry({ date, invoice_no, isVoid, refundSubtotal, refundTax, refundTotal, payment_method, split_cash_amount, split_electronic_amount }, t) {
+  if (refundTotal <= 0) return;
+
+  const lines = [
+    { code: SYSTEM_ACCOUNTS.SALES_REVENUE, debit: refundSubtotal, credit: 0 },
+    { code: SYSTEM_ACCOUNTS.SALES_TAX_PAYABLE, debit: refundTax, credit: 0 },
+    ...receiptLines(payment_method, refundTotal, split_cash_amount, split_electronic_amount, 'credit'),
+  ];
+  await postEntry(
+    { date, memo: `${isVoid ? 'Void' : 'Refund'} for ${invoice_no}`, source: 'sale', reference: invoice_no, lines },
+    t
+  );
+}
+
+/** Reverse the COGS side of a sale for a refund or void — puts the returned
+ *  stock's cost back into Inventory and out of Cost of Goods Sold. */
+async function postReturnCogsEntry({ invoice_no, isVoid, cogsAmount, date }, t) {
+  if (cogsAmount <= 0) return;
+  const lines = [
+    { code: SYSTEM_ACCOUNTS.INVENTORY, debit: cogsAmount, credit: 0 },
+    { code: SYSTEM_ACCOUNTS.COST_OF_GOODS_SOLD, debit: 0, credit: cogsAmount },
+  ];
+  await postEntry(
+    { date, memo: `${isVoid ? 'Void' : 'Refund'} COGS reversal for ${invoice_no}`, source: 'sale', reference: invoice_no, lines },
+    t
+  );
+}
+
+module.exports = {
+  SYSTEM_ACCOUNTS, postEntry, postSaleEntry, postCogsEntry, postPurchaseEntry,
+  postRefundEntry, postReturnCogsEntry, sequelize,
+};

@@ -35,7 +35,7 @@ export default function Receipt() {
       <div className="rp-dash" />
       {sale.SaleItems?.map(it => (
         <div key={it.id} className="rp-item">
-          <div>{it.qty} x {formatMoney(it.unit_price)}</div>
+          <div>{it.sold_qty ?? it.qty} x {formatMoney(it.unit_price)}{it.mode === 'pack' ? ' (box)' : ''}</div>
           <div className="rp-row">
             <span>&nbsp;&nbsp;Item #{it.product_id}</span>
             <span>{formatMoney(it.line_total)}</span>
@@ -48,7 +48,14 @@ export default function Receipt() {
       <div className="rp-row"><span>Tax</span><span>{formatMoney(sale.tax_total)}</span></div>
       <div className="rp-row rp-bold rp-lg"><span>TOTAL</span><span>{formatMoney(sale.total)}</span></div>
       <div className="rp-dash" />
-      <div className="rp-row"><span>Paid ({sale.payment_method})</span><span>{formatMoney(sale.amount_paid)}</span></div>
+      {sale.payment_method === 'split' ? (
+        <>
+          <div className="rp-row"><span>Paid (cash)</span><span>{formatMoney(sale.split_cash_amount)}</span></div>
+          <div className="rp-row"><span>Paid (electronic)</span><span>{formatMoney(sale.split_electronic_amount)}</span></div>
+        </>
+      ) : (
+        <div className="rp-row"><span>Paid ({sale.payment_method})</span><span>{formatMoney(sale.amount_paid)}</span></div>
+      )}
       {Number(sale.change_due) > 0 && <div className="rp-row"><span>Change</span><span>{formatMoney(sale.change_due)}</span></div>}
       <div className="rp-dash" />
       <div className="rp-center">{settings?.receipt_footer || 'Thank you for shopping with us!'}</div>

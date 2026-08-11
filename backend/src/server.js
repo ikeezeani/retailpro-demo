@@ -11,12 +11,32 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
+
+// Required on hosts that sit behind a reverse proxy (Render, Railway, most
+// PaaS providers) — without this, express-rate-limit throws
+// ERR_ERL_UNEXPECTED_X_FORWARDED_FOR because it can't trust the client IP in
+// the X-Forwarded-For header. Harmless to leave on for local Docker too.
+app.set('trust proxy', 1);
+
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
+
+// Brute-force protection on login: 10 attempts per 15 minutes per IP. This
+// is intentionally only on /auth/login, not the whole API, since generic
+// API rate limiting would also throttle a busy till doing many legitimate
+// requests per minute.
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many login attempts. Please wait a few minutes and try again.' },
+});
 
 // Install wizard routes are always reachable, even before installation.
 app.use('/api/install', require('./routes/install'));
@@ -30,6 +50,7 @@ app.use('/api', async (req, res, next) => {
   next();
 });
 
+app.use('/api/auth/login', loginLimiter);
 app.use('/api/auth', require('./routes/auth'));
 const { productsRouter, categoriesRouter } = require('./routes/products');
 app.use('/api/products', productsRouter);

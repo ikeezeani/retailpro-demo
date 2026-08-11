@@ -27,11 +27,18 @@ router.get('/', async (req, res) => {
   res.json(list);
 });
 
-// Exact barcode lookup — hit by the POS scanner on every scan for instant add-to-cart
+// Exact barcode lookup — hit by the POS scanner on every scan for instant add-to-cart.
+// Checks the each-level barcode first, then the pack/case barcode, so scanning
+// either a single bottle or a full box both work from the same product record.
 router.get('/barcode/:code', async (req, res) => {
-  const product = await Product.findOne({ where: { barcode: req.params.code } });
-  if (!product) return res.status(404).json({ error: 'No product matches this barcode' });
-  res.json(product);
+  const code = req.params.code;
+  let product = await Product.findOne({ where: { barcode: code } });
+  if (product) return res.json({ ...product.toJSON(), matchedAs: 'each' });
+
+  product = await Product.findOne({ where: { pack_barcode: code } });
+  if (product) return res.json({ ...product.toJSON(), matchedAs: 'pack' });
+
+  return res.status(404).json({ error: 'No product matches this barcode' });
 });
 
 router.get('/:id', async (req, res) => {

@@ -39,6 +39,9 @@ RetailPro supports:
 - **Card**
 - **Mobile Money**
 - **Bank Transfer**
+- **Split Pay** — part cash, part card/mobile money/bank transfer, entered as two
+  amounts that must add up to the total; the accounting entry splits correctly
+  between the Cash and Bank accounts
 - **On Credit** — requires selecting a customer; the sale is added to that customer's
   balance instead of being paid immediately
 

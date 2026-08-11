@@ -7,17 +7,22 @@ const PAY_METHODS = [
   { key: 'card', label: 'Card' },
   { key: 'mobile_money', label: 'Mobile Money' },
   { key: 'bank_transfer', label: 'Bank Transfer' },
+  { key: 'split', label: 'Split Pay' },
   { key: 'credit', label: 'On Credit' },
 ];
+
+const lineKey = (productId, mode) => `${productId}-${mode}`;
 
 export default function POS() {
   const { formatMoney, settings } = useApp();
   const [products, setProducts] = useState([]);
   const [query, setQuery] = useState('');
   const [scanValue, setScanValue] = useState('');
-  const [cart, setCart] = useState([]); // {product, qty}
+  const [cart, setCart] = useState([]); // {product, mode, qty}
   const [payMethod, setPayMethod] = useState('cash');
   const [amountPaid, setAmountPaid] = useState('');
+  const [splitCash, setSplitCash] = useState('');
+  const [splitElectronic, setSplitElectronic] = useState('');
   const [customers, setCustomers] = useState([]);
   const [customerId, setCustomerId] = useState('');
   const [toast, setToast] = useState(null);
@@ -42,18 +47,27 @@ export default function POS() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const addToCart = (product, qty = 1) => {
-    if (Number(product.stock_qty) <= 0) return showToast(`${product.name} is out of stock`, true);
+  // eaches already committed to the cart for this product, across both
+  // each- and pack-mode lines, so we never oversell combined stock.
+  const eachesInCart = (productId, packSize) =>
+    cart.filter(l => l.product.id === productId)
+      .reduce((s, l) => s + (l.mode === 'pack' ? l.qty * packSize : l.qty), 0);
+
+  const addToCart = (product, mode = 'each', qty = 1) => {
+    const packSize = Math.max(1, Number(product.pack_size) || 1);
+    if (mode === 'pack' && !(Number(product.pack_price) > 0)) {
+      return showToast(`${product.name} has no pack price set`, true);
+    }
+    const eachesNeeded = mode === 'pack' ? qty * packSize : qty;
+    const already = eachesInCart(product.id, packSize);
+    if (already + eachesNeeded > Number(product.stock_qty)) {
+      return showToast(`Only ${product.stock_qty} ${product.unit} of ${product.name} in stock`, true);
+    }
     setCart(prev => {
-      const existing = prev.find(l => l.product.id === product.id);
-      if (existing) {
-        if (existing.qty + qty > Number(product.stock_qty)) {
-          showToast(`Only ${product.stock_qty} of ${product.name} in stock`, true);
-          return prev;
-        }
-        return prev.map(l => l.product.id === product.id ? { ...l, qty: l.qty + qty } : l);
-      }
-      return [...prev, { product, qty }];
+      const key = lineKey(product.id, mode);
+      const existing = prev.find(l => lineKey(l.product.id, l.mode) === key);
+      if (existing) return prev.map(l => lineKey(l.product.id, l.mode) === key ? { ...l, qty: l.qty + qty } : l);
+      return [...prev, { product, mode, qty }];
     });
   };
 
@@ -64,40 +78,48 @@ export default function POS() {
     if (!code) return;
     try {
       const { data } = await client.get(`/products/barcode/${encodeURIComponent(code)}`);
-      addToCart(data);
+      addToCart(data, data.matchedAs === 'pack' ? 'pack' : 'each');
     } catch {
       showToast(`No product found for barcode "${code}"`, true);
     }
   };
 
-  const setQty = (productId, qty) => {
+  const setQty = (productId, mode, qty) => {
     setCart(prev => prev
-      .map(l => l.product.id === productId ? { ...l, qty: Math.max(0, qty) } : l)
+      .map(l => lineKey(l.product.id, l.mode) === lineKey(productId, mode) ? { ...l, qty: Math.max(0, qty) } : l)
       .filter(l => l.qty > 0));
   };
 
-  const removeLine = (productId) => setCart(prev => prev.filter(l => l.product.id !== productId));
+  const removeLine = (productId, mode) => setCart(prev => prev.filter(l => lineKey(l.product.id, l.mode) !== lineKey(productId, mode)));
 
-  const subtotal = cart.reduce((s, l) => s + Number(l.product.sale_price) * l.qty, 0);
-  const taxTotal = cart.reduce((s, l) => s + (Number(l.product.sale_price) * l.qty * Number(l.product.tax_rate || 0)) / 100, 0);
+  const unitPriceFor = (l) => l.mode === 'pack' ? Number(l.product.pack_price) : Number(l.product.sale_price);
+  const subtotal = cart.reduce((s, l) => s + unitPriceFor(l) * l.qty, 0);
+  const taxTotal = cart.reduce((s, l) => s + (unitPriceFor(l) * l.qty * Number(l.product.tax_rate || 0)) / 100, 0);
   const total = subtotal + taxTotal;
   const change = Math.max(0, Number(amountPaid || 0) - total);
+  const splitEntered = Number(splitCash || 0) + Number(splitElectronic || 0);
+  const splitRemaining = total - splitEntered;
 
   const checkout = async () => {
     if (!cart.length) return;
-    if (payMethod !== 'credit' && Number(amountPaid || 0) < total) return showToast('Amount received is less than total due', true);
+    if (payMethod === 'cash' && Number(amountPaid || 0) < total) return showToast('Amount received is less than total due', true);
     if (payMethod === 'credit' && !customerId) return showToast('Select a customer for credit sales', true);
+    if (payMethod === 'split' && Math.abs(splitRemaining) > 0.01) {
+      return showToast(`Split amounts must add up to ${formatMoney(total)} (currently ${formatMoney(splitEntered)})`, true);
+    }
     setBusy(true);
     try {
       const { data } = await client.post('/sales', {
-        items: cart.map(l => ({ product_id: l.product.id, qty: l.qty })),
+        items: cart.map(l => ({ product_id: l.product.id, qty: l.qty, mode: l.mode })),
         payment_method: payMethod,
-        amount_paid: payMethod === 'credit' ? 0 : Number(amountPaid),
+        amount_paid: payMethod === 'credit' || payMethod === 'split' ? 0 : Number(amountPaid),
         customer_id: customerId || null,
+        split_cash_amount: payMethod === 'split' ? Number(splitCash || 0) : undefined,
+        split_electronic_amount: payMethod === 'split' ? Number(splitElectronic || 0) : undefined,
       });
       showToast('Sale completed ✓');
       window.open(`/receipt/${data.id}`, '_blank', 'width=420,height=700');
-      setCart([]); setAmountPaid(''); setCustomerId(''); setPayMethod('cash');
+      setCart([]); setAmountPaid(''); setCustomerId(''); setPayMethod('cash'); setSplitCash(''); setSplitElectronic('');
       loadProducts();
       scanRef.current?.focus();
     } catch (e) {
@@ -112,7 +134,7 @@ export default function POS() {
           <span className="scan-icon">▌▌ ▍▌▍▌▍</span>
           <input
             ref={scanRef}
-            placeholder="Scan barcode or click a product below…"
+            placeholder="Scan a bottle or a box barcode…"
             value={scanValue}
             onChange={e => setScanValue(e.target.value)}
             autoFocus
@@ -129,17 +151,29 @@ export default function POS() {
         />
 
         <div className="product-grid">
-          {products.map(p => (
-            <button
-              key={p.id}
-              className={`product-tile${Number(p.stock_qty) <= 0 ? ' out-of-stock' : ''}`}
-              onClick={() => addToCart(p)}
-            >
-              <div className="p-name">{p.name}</div>
-              <div className="p-price">{formatMoney(p.sale_price)}</div>
-              <div className="p-stock">{p.stock_qty} {p.unit} in stock</div>
-            </button>
-          ))}
+          {products.map(p => {
+            const canSellPack = Number(p.pack_size) > 1 && Number(p.pack_price) > 0;
+            return (
+              <div key={p.id} className={`product-tile${Number(p.stock_qty) <= 0 ? ' out-of-stock' : ''}`} style={{ padding: 0, overflow: 'hidden' }}>
+                <button style={{ all: 'unset', display: 'block', width: '100%', padding: 14, cursor: 'pointer', boxSizing: 'border-box' }} onClick={() => addToCart(p, 'each')}>
+                  <div className="p-name">{p.name}</div>
+                  <div className="p-price">{formatMoney(p.sale_price)} <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>/ {p.unit}</span></div>
+                  <div className="p-stock">{p.stock_qty} {p.unit} in stock</div>
+                </button>
+                {canSellPack && (
+                  <button
+                    onClick={() => addToCart(p, 'pack')}
+                    style={{
+                      width: '100%', border: 'none', borderTop: '1px solid var(--border)', background: 'rgba(35,196,160,0.08)',
+                      color: 'var(--accent)', fontSize: 11.5, fontWeight: 700, padding: '7px 10px', cursor: 'pointer', textAlign: 'left',
+                    }}
+                  >
+                    + Box of {p.pack_size} — {formatMoney(p.pack_price)}
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -153,18 +187,18 @@ export default function POS() {
           <div className="receipt-items">
             {cart.length === 0 && <div className="receipt-empty">Cart is empty — scan or tap a product to begin a sale.</div>}
             {cart.map(l => (
-              <div className="receipt-line" key={l.product.id}>
+              <div className="receipt-line" key={lineKey(l.product.id, l.mode)}>
                 <div className="receipt-line-top">
-                  <span>{l.product.name}</span>
-                  <span>{formatMoney(Number(l.product.sale_price) * l.qty)}</span>
+                  <span>{l.product.name}{l.mode === 'pack' ? ` (Box of ${l.product.pack_size})` : ''}</span>
+                  <span>{formatMoney(unitPriceFor(l) * l.qty)}</span>
                 </div>
                 <div className="receipt-line-sub">
                   <div className="receipt-qty-controls">
-                    <button onClick={() => setQty(l.product.id, l.qty - 1)}>−</button>
-                    <span>{l.qty} × {formatMoney(l.product.sale_price)}</span>
-                    <button onClick={() => setQty(l.product.id, l.qty + 1)}>+</button>
+                    <button onClick={() => setQty(l.product.id, l.mode, l.qty - 1)}>−</button>
+                    <span>{l.qty} × {formatMoney(unitPriceFor(l))}</span>
+                    <button onClick={() => setQty(l.product.id, l.mode, l.qty + 1)}>+</button>
                   </div>
-                  <button onClick={() => removeLine(l.product.id)} style={{ border: 'none', background: 'none', color: '#b34a4a', cursor: 'pointer' }}>remove</button>
+                  <button onClick={() => removeLine(l.product.id, l.mode)} style={{ border: 'none', background: 'none', color: '#b34a4a', cursor: 'pointer' }}>remove</button>
                 </div>
               </div>
             ))}
@@ -194,6 +228,20 @@ export default function POS() {
                 {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
+          ) : payMethod === 'split' ? (
+            <div style={{ marginBottom: 10 }}>
+              <label className="field-label">Cash Amount</label>
+              <input className="input mono" type="number" step="0.01" value={splitCash} onChange={e => setSplitCash(e.target.value)} placeholder="0.00" style={{ marginBottom: 8 }} />
+              <label className="field-label">Card / Mobile Money / Bank Transfer Amount</label>
+              <input className="input mono" type="number" step="0.01" value={splitElectronic} onChange={e => setSplitElectronic(e.target.value)} placeholder="0.00" />
+              <div style={{ fontSize: 12, marginTop: 6, color: Math.abs(splitRemaining) > 0.01 ? 'var(--amber)' : 'var(--accent)' }}>
+                {Math.abs(splitRemaining) <= 0.01
+                  ? '✓ Fully covers the total'
+                  : splitRemaining > 0
+                  ? `${formatMoney(splitRemaining)} still needed`
+                  : `${formatMoney(-splitRemaining)} over the total`}
+              </div>
+            </div>
           ) : (
             <div style={{ marginBottom: 10 }}>
               <label className="field-label">Amount Received</label>
@@ -202,7 +250,7 @@ export default function POS() {
             </div>
           )}
 
-          <button className="btn btn-primary" style={{ width: '100%' }} onClick={checkout} disabled={busy || !cart.length}>
+          <button className="btn btn-primary" style={{ width: '100%' }} onClick={checkout} disabled={busy || !cart.length || (payMethod === 'split' && Math.abs(splitRemaining) > 0.01)}>
             {busy ? 'Processing…' : `Charge ${formatMoney(total)}`}
           </button>
         </div>

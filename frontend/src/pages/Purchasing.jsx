@@ -11,7 +11,7 @@ export default function Purchasing() {
   const [creating, setCreating] = useState(false);
   const [supplierId, setSupplierId] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('credit');
-  const [lines, setLines] = useState([{ product_id: '', qty: 1, unit_cost: 0, tax_rate: 0 }]);
+  const [lines, setLines] = useState([{ product_id: '', qty: 1, mode: 'each', unit_cost: 0, tax_rate: 0 }]);
   const [error, setError] = useState('');
 
   const load = () => client.get('/purchases').then(({ data }) => setPurchases(data));
@@ -21,13 +21,19 @@ export default function Purchasing() {
     client.get('/products').then(({ data }) => setProducts(data));
   }, []);
 
-  const addLine = () => setLines([...lines, { product_id: '', qty: 1, unit_cost: 0, tax_rate: 0 }]);
+  const addLine = () => setLines([...lines, { product_id: '', qty: 1, mode: 'each', unit_cost: 0, tax_rate: 0 }]);
   const updateLine = (i, field, val) => {
     const copy = [...lines];
     copy[i][field] = val;
-    if (field === 'product_id') {
-      const prod = products.find(p => p.id === Number(val));
-      if (prod) copy[i].unit_cost = prod.cost_price;
+    const prod = products.find(p => p.id === Number(copy[i].product_id));
+    if (field === 'product_id' && prod) {
+      copy[i].mode = 'each';
+      copy[i].unit_cost = prod.cost_price;
+    }
+    if (field === 'mode' && prod) {
+      // Suggest a sensible starting cost when switching units — editable either way.
+      const packSize = Math.max(1, Number(prod.pack_size) || 1);
+      copy[i].unit_cost = val === 'pack' ? (Number(prod.cost_price) * packSize).toFixed(2) : prod.cost_price;
     }
     setLines(copy);
   };
@@ -45,7 +51,7 @@ export default function Purchasing() {
     try {
       await client.post('/purchases', { supplier_id: supplierId || null, items, payment_method: paymentMethod, status: 'ordered' });
       setCreating(false);
-      setLines([{ product_id: '', qty: 1, unit_cost: 0, tax_rate: 0 }]);
+      setLines([{ product_id: '', qty: 1, mode: 'each', unit_cost: 0, tax_rate: 0 }]);
       setSupplierId('');
       load();
     } catch (e) { setError(e.response?.data?.error || 'Failed to create order'); }
@@ -111,19 +117,27 @@ export default function Purchasing() {
 
           <label className="field-label">Line Items</label>
           <div style={{ overflowX: 'auto', paddingBottom: 4 }}>
-            <div style={{ minWidth: 520 }}>
-              {lines.map((l, i) => (
-                <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 0.7fr 0.9fr 0.7fr auto', gap: 8, marginBottom: 8 }}>
-                  <select className="input" value={l.product_id} onChange={e => updateLine(i, 'product_id', e.target.value)}>
-                    <option value="">Product…</option>
-                    {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                  </select>
-                  <input className="input" type="number" placeholder="Qty" value={l.qty} onChange={e => updateLine(i, 'qty', e.target.value)} />
-                  <input className="input" type="number" step="0.01" placeholder="Unit Cost" value={l.unit_cost} onChange={e => updateLine(i, 'unit_cost', e.target.value)} />
-                  <input className="input" type="number" step="0.01" placeholder="Tax %" value={l.tax_rate} onChange={e => updateLine(i, 'tax_rate', e.target.value)} />
-                  <button className="btn btn-danger" onClick={() => removeLine(i)}>×</button>
-                </div>
-              ))}
+            <div style={{ minWidth: 620 }}>
+              {lines.map((l, i) => {
+                const prod = products.find(p => p.id === Number(l.product_id));
+                const canPack = prod && Number(prod.pack_size) > 1;
+                return (
+                  <div key={i} style={{ display: 'grid', gridTemplateColumns: '1.8fr 0.9fr 0.6fr 0.9fr 0.7fr auto', gap: 8, marginBottom: 8 }}>
+                    <select className="input" value={l.product_id} onChange={e => updateLine(i, 'product_id', e.target.value)}>
+                      <option value="">Product…</option>
+                      {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
+                    <input className="input" type="number" placeholder="Qty" value={l.qty} onChange={e => updateLine(i, 'qty', e.target.value)} />
+                    <select className="input" value={l.mode} disabled={!canPack} onChange={e => updateLine(i, 'mode', e.target.value)} title={canPack ? '' : 'This product has no pack size set'}>
+                      <option value="each">each</option>
+                      {canPack && <option value="pack">box of {prod.pack_size}</option>}
+                    </select>
+                    <input className="input" type="number" step="0.01" placeholder={l.mode === 'pack' ? 'Cost per box' : 'Cost per each'} value={l.unit_cost} onChange={e => updateLine(i, 'unit_cost', e.target.value)} />
+                    <input className="input" type="number" step="0.01" placeholder="Tax %" value={l.tax_rate} onChange={e => updateLine(i, 'tax_rate', e.target.value)} />
+                    <button className="btn btn-danger" onClick={() => removeLine(i)}>×</button>
+                  </div>
+                );
+              })}
             </div>
           </div>
           <button className="btn" onClick={addLine} style={{ marginBottom: 14 }}>+ Add Line</button>

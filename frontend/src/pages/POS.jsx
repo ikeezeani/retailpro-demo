@@ -21,6 +21,7 @@ export default function POS() {
   const [cart, setCart] = useState([]); // {product, mode, qty}
   const [payMethod, setPayMethod] = useState('cash');
   const [amountPaid, setAmountPaid] = useState('');
+  const [amountTouched, setAmountTouched] = useState(false); // has the cashier manually edited this?
   const [splitCash, setSplitCash] = useState('');
   const [splitElectronic, setSplitElectronic] = useState('');
   const [customers, setCustomers] = useState([]);
@@ -96,6 +97,16 @@ export default function POS() {
   const subtotal = cart.reduce((s, l) => s + unitPriceFor(l) * l.qty, 0);
   const taxTotal = cart.reduce((s, l) => s + (unitPriceFor(l) * l.qty * Number(l.product.tax_rate || 0)) / 100, 0);
   const total = subtotal + taxTotal;
+
+  // Default cash payments to the exact total — most sales are paid exactly,
+  // and this avoids the confusing "the field looks filled in but isn't"
+  // trap of relying on placeholder text alone. Stops auto-syncing the
+  // moment the cashier actually types their own amount.
+  useEffect(() => {
+    if (payMethod === 'cash' && !amountTouched) {
+      setAmountPaid(total > 0 ? total.toFixed(2) : '');
+    }
+  }, [total, payMethod, amountTouched]);
   const change = Math.max(0, Number(amountPaid || 0) - total);
   const splitEntered = Number(splitCash || 0) + Number(splitElectronic || 0);
   const splitRemaining = total - splitEntered;
@@ -119,7 +130,7 @@ export default function POS() {
       });
       showToast('Sale completed ✓');
       window.open(`/receipt/${data.id}`, '_blank', 'width=420,height=700');
-      setCart([]); setAmountPaid(''); setCustomerId(''); setPayMethod('cash'); setSplitCash(''); setSplitElectronic('');
+      setCart([]); setAmountPaid(''); setAmountTouched(false); setCustomerId(''); setPayMethod('cash'); setSplitCash(''); setSplitElectronic('');
       loadProducts();
       scanRef.current?.focus();
     } catch (e) {
@@ -214,7 +225,7 @@ export default function POS() {
           <label className="field-label">Payment Method</label>
           <div className="pay-methods">
             {PAY_METHODS.map(m => (
-              <button key={m.key} className={`pay-method-btn${payMethod === m.key ? ' active' : ''}`} onClick={() => setPayMethod(m.key)}>
+              <button key={m.key} className={`pay-method-btn${payMethod === m.key ? ' active' : ''}`} onClick={() => { setPayMethod(m.key); setAmountTouched(false); }}>
                 {m.label}
               </button>
             ))}
@@ -245,7 +256,7 @@ export default function POS() {
           ) : (
             <div style={{ marginBottom: 10 }}>
               <label className="field-label">Amount Received</label>
-              <input className="input mono" type="number" step="0.01" value={amountPaid} onChange={e => setAmountPaid(e.target.value)} placeholder={formatMoney(total)} />
+              <input className="input mono" type="number" step="0.01" value={amountPaid} onChange={e => { setAmountPaid(e.target.value); setAmountTouched(true); }} placeholder={formatMoney(total)} />
               {Number(amountPaid) > 0 && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>Change due: <strong className="mono">{formatMoney(change)}</strong></div>}
             </div>
           )}

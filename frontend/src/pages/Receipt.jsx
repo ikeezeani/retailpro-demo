@@ -37,7 +37,7 @@ export default function Receipt() {
         <div key={it.id} className="rp-item">
           <div>{it.sold_qty ?? it.qty} x {formatMoney(it.unit_price)}{it.mode === 'pack' ? ' (box)' : ''}</div>
           <div className="rp-row">
-            <span>&nbsp;&nbsp;Item #{it.product_id}</span>
+            <span>&nbsp;&nbsp;{it.Product?.name || `Item #${it.product_id}`}</span>
             <span>{formatMoney(it.line_total)}</span>
           </div>
         </div>

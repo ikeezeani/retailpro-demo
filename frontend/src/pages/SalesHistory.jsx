@@ -110,7 +110,7 @@ export default function SalesHistory() {
             return (
               <div key={it.id} style={{ padding: '9px 0', borderBottom: '1px solid var(--border)', fontSize: 13.5 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>{it.sold_qty ?? it.qty} × {formatMoney(it.unit_price)}{it.mode === 'pack' ? ' (box)' : ''}</span>
+                  <span><strong>{it.Product?.name || `Item #${it.product_id}`}</strong> — {it.sold_qty ?? it.qty} × {formatMoney(it.unit_price)}{it.mode === 'pack' ? ' (box)' : ''}</span>
                   <span className="mono">{formatMoney(it.line_total)}</span>
                 </div>
                 {canManage && canReturn && remainingQty > 0 && (

@@ -130,7 +130,9 @@ router.get('/', async (req, res) => {
 });
 
 router.get('/:id', async (req, res) => {
-  const sale = await Sale.findByPk(req.params.id, { include: [SaleItem, Customer] });
+  const sale = await Sale.findByPk(req.params.id, {
+    include: [{ model: SaleItem, include: [Product] }, Customer],
+  });
   if (!sale) return res.status(404).json({ error: 'Sale not found' });
   res.json(sale);
 });

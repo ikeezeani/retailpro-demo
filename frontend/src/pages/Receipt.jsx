@@ -12,14 +12,6 @@ export default function Receipt() {
     client.get(`/sales/${id}`).then(({ data }) => setSale(data));
   }, [id]);
 
-  useEffect(() => {
-    if (sale) {
-      // Give the browser a beat to paint before opening the print dialog.
-      const t = setTimeout(() => window.print(), 300);
-      return () => clearTimeout(t);
-    }
-  }, [sale]);
-
   if (!sale) return <p style={{ padding: 20, fontFamily: 'monospace' }}>Loading receipt…</p>;
 
   return (
@@ -62,7 +54,7 @@ export default function Receipt() {
       <div className="rp-center rp-small">Powered by RetailPro 5.0</div>
 
       <button className="btn btn-primary no-print" style={{ marginTop: 16, width: '100%' }} onClick={() => window.print()}>
-        Print Again
+        🖨️ Print Receipt
       </button>
     </div>
   );

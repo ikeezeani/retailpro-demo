@@ -129,7 +129,7 @@ export default function POS() {
         split_electronic_amount: payMethod === 'split' ? Number(splitElectronic || 0) : undefined,
       });
       showToast('Sale completed ✓');
-      window.open(`/receipt/${data.id}`, '_blank', 'width=420,height=700');
+      window.open(`/receipt/${data.id}`, '_blank');
       setCart([]); setAmountPaid(''); setAmountTouched(false); setCustomerId(''); setPayMethod('cash'); setSplitCash(''); setSplitElectronic('');
       loadProducts();
       scanRef.current?.focus();

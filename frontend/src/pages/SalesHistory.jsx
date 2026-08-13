@@ -183,7 +183,7 @@ export default function SalesHistory() {
           <button
             className="btn"
             style={{ width: '100%', marginTop: 16 }}
-            onClick={() => window.open(`/receipt/${viewing.id}`, '_blank', 'width=420,height=700')}
+            onClick={() => window.open(`/receipt/${viewing.id}`, '_blank')}
           >
             🖨️ Print Receipt
           </button>

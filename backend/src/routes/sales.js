@@ -110,7 +110,7 @@ router.post('/', async (req, res) => {
     await postCogsEntry({ invoice_no, cogsAmount, date: new Date() }, t);
 
     await t.commit();
-    const full = await Sale.findByPk(sale.id, { include: [SaleItem, Customer] });
+    const full = await Sale.findByPk(sale.id, { include: [{ model: SaleItem, include: [Product] }, Customer] });
     res.status(201).json(full);
   } catch (e) {
     await t.rollback();
@@ -125,7 +125,10 @@ router.get('/', async (req, res) => {
     const { Op } = require('sequelize');
     where.createdAt = { [Op.between]: [new Date(from), new Date(to + 'T23:59:59')] };
   }
-  const sales = await Sale.findAll({ where, include: [Customer], order: [['createdAt', 'DESC']], limit: 200 });
+  const sales = await Sale.findAll({
+    where, include: [Customer, { model: SaleItem, include: [Product] }],
+    order: [['createdAt', 'DESC']], limit: 200,
+  });
   res.json(sales);
 });
 
@@ -231,7 +234,7 @@ router.post('/:id/refund', requireRole('admin', 'manager'), async (req, res) => 
     if (!sale) throw new Error('Sale not found');
     const result = await processReturn(sale, sale.SaleItems, { items, reason, isVoid: false, userId: req.user.id }, t);
     await t.commit();
-    res.json({ ok: true, ...result, sale: await Sale.findByPk(sale.id, { include: [SaleItem, Customer] }) });
+    res.json({ ok: true, ...result, sale: await Sale.findByPk(sale.id, { include: [{ model: SaleItem, include: [Product] }, Customer] }) });
   } catch (e) {
     await t.rollback();
     res.status(400).json({ error: e.message });
@@ -251,7 +254,7 @@ router.post('/:id/void', requireRole('admin', 'manager'), async (req, res) => {
     if (!sale) throw new Error('Sale not found');
     const result = await processReturn(sale, sale.SaleItems, { reason, isVoid: true, userId: req.user.id }, t);
     await t.commit();
-    res.json({ ok: true, ...result, sale: await Sale.findByPk(sale.id, { include: [SaleItem, Customer] }) });
+    res.json({ ok: true, ...result, sale: await Sale.findByPk(sale.id, { include: [{ model: SaleItem, include: [Product] }, Customer] }) });
   } catch (e) {
     await t.rollback();
     res.status(400).json({ error: e.message });

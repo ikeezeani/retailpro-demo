@@ -10,6 +10,19 @@ const STATUS_BADGE = {
   void: 'badge-red',
 };
 
+// Short "at a glance" summary for the list view — full detail lives in the
+// View modal, this just needs to be scannable across many rows.
+function itemsSummary(items) {
+  if (!items || !items.length) return '—';
+  const parts = items.slice(0, 2).map(it => {
+    const name = it.Product?.name || `Item #${it.product_id}`;
+    const qty = it.sold_qty ?? it.qty;
+    return `${name} ×${qty}`;
+  });
+  const extra = items.length - 2;
+  return extra > 0 ? `${parts.join(', ')} +${extra} more` : parts.join(', ');
+}
+
 export default function SalesHistory() {
   const { formatMoney, user } = useApp();
   const canManage = user?.role === 'admin' || user?.role === 'manager';
@@ -75,12 +88,13 @@ export default function SalesHistory() {
     <div>
       <div className="card" style={{ padding: 0 }}>
         <table className="data-table">
-          <thead><tr><th>Invoice</th><th>Date</th><th>Customer</th><th>Payment</th><th>Total</th><th>Status</th><th></th></tr></thead>
+          <thead><tr><th>Invoice</th><th>Date</th><th>Items</th><th>Customer</th><th>Payment</th><th>Total</th><th>Status</th><th></th></tr></thead>
           <tbody>
             {sales.map(s => (
               <tr key={s.id}>
                 <td className="mono">{s.invoice_no}</td>
                 <td>{new Date(s.createdAt).toLocaleString()}</td>
+                <td style={{ fontSize: 13, color: 'var(--text-muted)' }}>{itemsSummary(s.SaleItems)}</td>
                 <td>{s.Customer?.name || 'Walk-in'}</td>
                 <td style={{ textTransform: 'capitalize' }}>{s.payment_method.replace('_', ' ')}</td>
                 <td className="mono">{formatMoney(s.total)}</td>

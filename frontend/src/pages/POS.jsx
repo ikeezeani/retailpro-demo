@@ -113,7 +113,7 @@ export default function POS() {
 
   const checkout = async () => {
     if (!cart.length) return;
-    if (payMethod === 'cash' && Number(amountPaid || 0) < total) return showToast('Amount received is less than total due', true);
+    if (payMethod === 'cash' && Number(amountPaid || 0) < total - 0.01) return showToast('Amount received is less than total due', true);
     if (payMethod === 'credit' && !customerId) return showToast('Select a customer for credit sales', true);
     if (payMethod === 'split' && Math.abs(splitRemaining) > 0.01) {
       return showToast(`Split amounts must add up to ${formatMoney(total)} (currently ${formatMoney(splitEntered)})`, true);

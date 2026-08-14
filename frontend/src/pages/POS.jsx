@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import client from '../api/client';
 import { useApp } from '../context/AppContext.jsx';
+import Modal from '../components/Modal.jsx';
+import ReceiptView from '../components/ReceiptView.jsx';
 
 const PAY_METHODS = [
   { key: 'cash', label: 'Cash' },
@@ -28,6 +30,7 @@ export default function POS() {
   const [customerId, setCustomerId] = useState('');
   const [toast, setToast] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [completedSale, setCompletedSale] = useState(null); // shown in an in-page receipt modal after checkout
   const scanRef = useRef(null);
 
   useEffect(() => {
@@ -129,7 +132,7 @@ export default function POS() {
         split_electronic_amount: payMethod === 'split' ? Number(splitElectronic || 0) : undefined,
       });
       showToast('Sale completed ✓');
-      window.open(`/receipt/${data.id}`, '_blank');
+      setCompletedSale(data);
       setCart([]); setAmountPaid(''); setAmountTouched(false); setCustomerId(''); setPayMethod('cash'); setSplitCash(''); setSplitElectronic('');
       loadProducts();
       scanRef.current?.focus();
@@ -268,6 +271,22 @@ export default function POS() {
       </div>
 
       {toast && <div className={`toast${toast.error ? ' error' : ''}`}>{toast.message}</div>}
+
+      {completedSale && (
+        <Modal title={`Sale Complete — ${completedSale.invoice_no}`} onClose={() => setCompletedSale(null)}>
+          <ReceiptView sale={completedSale} />
+          <button
+            className="btn btn-primary no-print"
+            style={{ width: '100%', marginTop: 16 }}
+            onClick={() => window.print()}
+          >
+            🖨️ Print Receipt
+          </button>
+          <button className="btn no-print" style={{ width: '100%', marginTop: 8 }} onClick={() => setCompletedSale(null)}>
+            Start Next Sale
+          </button>
+        </Modal>
+      )}
     </div>
   );
 }

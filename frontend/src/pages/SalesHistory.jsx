@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import client from '../api/client';
 import { useApp } from '../context/AppContext.jsx';
 import Modal from '../components/Modal.jsx';
+import ReceiptView from '../components/ReceiptView.jsx';
 
 const STATUS_BADGE = {
   completed: 'badge-green',
@@ -34,6 +35,7 @@ export default function SalesHistory() {
   const [voidReason, setVoidReason] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [showReceipt, setShowReceipt] = useState(false);
 
   const load = () => client.get('/sales').then(({ data }) => setSales(data));
   useEffect(() => { load(); }, []);
@@ -46,6 +48,7 @@ export default function SalesHistory() {
     setVoiding(false);
     setVoidReason('');
     setError('');
+    setShowReceipt(false);
   };
 
   const remaining = (it) => Number(it.sold_qty ?? it.qty) - Number(it.refunded_qty || 0);
@@ -183,8 +186,17 @@ export default function SalesHistory() {
           <button
             className="btn"
             style={{ width: '100%', marginTop: 16 }}
-            onClick={() => window.open(`/receipt/${viewing.id}`, '_blank')}
+            onClick={() => setShowReceipt(true)}
           >
+            🖨️ Print Receipt
+          </button>
+        </Modal>
+      )}
+
+      {showReceipt && viewing && (
+        <Modal title={`Receipt — ${viewing.invoice_no}`} onClose={() => setShowReceipt(false)}>
+          <ReceiptView sale={viewing} />
+          <button className="btn btn-primary no-print" style={{ width: '100%', marginTop: 16 }} onClick={() => window.print()}>
             🖨️ Print Receipt
           </button>
         </Modal>

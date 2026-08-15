@@ -32,9 +32,9 @@ export default function POS() {
   const [busy, setBusy] = useState(false);
   const [completedSale, setCompletedSale] = useState(null); // shown in an in-page receipt modal after checkout
   const scanRef = useRef(null);
+  const latestQueryRef = useRef(''); // guards against an older, slower search response overwriting a newer one
 
   useEffect(() => {
-    loadProducts();
     client.get('/customers').then(({ data }) => setCustomers(data));
     scanRef.current?.focus();
   }, []);
@@ -42,8 +42,15 @@ export default function POS() {
   useEffect(() => { loadProducts(); }, [query]);
 
   const loadProducts = async () => {
-    const { data } = await client.get('/products', { params: query ? { q: query } : {} });
-    setProducts(data.filter(p => p.active));
+    const q = query; // capture the query this specific request is for
+    latestQueryRef.current = q;
+    const { data } = await client.get('/products', { params: q ? { q } : {} });
+    // If the search box has moved on to a different query since this request
+    // was fired, its response is stale — discard it instead of letting it
+    // clobber whatever the more recent request already showed.
+    if (latestQueryRef.current === q) {
+      setProducts(data.filter(p => p.active));
+    }
   };
 
   const showToast = (message, error = false) => {

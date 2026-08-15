@@ -1,20 +1,37 @@
 const express = require('express');
 const { Op } = require('sequelize');
+const { body } = require('express-validator');
 const router = express.Router();
-const { Product, Category, Supplier, StockMovement } = require('../models');
+const { sequelize, Product, Category, Supplier, StockMovement } = require('../models');
 const { requireAuth, requireRole } = require('../middleware/auth');
+const { handleValidation } = require('../middleware/validate');
 
 router.use(requireAuth);
+
+const productValidators = [
+  body('name').trim().notEmpty().withMessage('Product name is required'),
+  body('sku').trim().notEmpty().withMessage('SKU is required'),
+  body('sale_price').optional().isFloat({ min: 0 }).withMessage('Sale price cannot be negative'),
+  body('cost_price').optional().isFloat({ min: 0 }).withMessage('Cost price cannot be negative'),
+  body('tax_rate').optional().isFloat({ min: 0, max: 100 }).withMessage('Tax rate must be between 0 and 100'),
+  body('pack_size').optional().isInt({ min: 1 }).withMessage('Pack size must be at least 1'),
+  body('pack_price').optional({ nullable: true }).isFloat({ min: 0 }).withMessage('Pack price cannot be negative'),
+];
 
 // List / search products (used by POS product grid + inventory table)
 router.get('/', async (req, res) => {
   const { q, category_id, low_stock } = req.query;
   const where = {};
   if (q) {
+    // Explicit LOWER() on both sides makes this case-insensitive regardless
+    // of the database's default collation — MySQL and TiDB don't always
+    // agree on that default, and relying on it silently broke search on one
+    // but not the other.
+    const needle = `%${q.toLowerCase()}%`;
     where[Op.or] = [
-      { name: { [Op.like]: `%${q}%` } },
-      { sku: { [Op.like]: `%${q}%` } },
-      { barcode: { [Op.like]: `%${q}%` } },
+      sequelize.where(sequelize.fn('LOWER', sequelize.col('name')), { [Op.like]: needle }),
+      sequelize.where(sequelize.fn('LOWER', sequelize.col('sku')), { [Op.like]: needle }),
+      sequelize.where(sequelize.fn('LOWER', sequelize.col('barcode')), { [Op.like]: needle }),
     ];
   }
   if (category_id) where.category_id = category_id;
@@ -47,20 +64,26 @@ router.get('/:id', async (req, res) => {
   res.json(product);
 });
 
-router.post('/', requireRole('admin', 'manager'), async (req, res) => {
+router.post('/', requireRole('admin', 'manager'), productValidators, handleValidation, async (req, res) => {
   try {
     const product = await Product.create(req.body);
     res.status(201).json(product);
   } catch (e) {
-    res.status(400).json({ error: e.message });
+    const friendly = e.name === 'SequelizeUniqueConstraintError' ? 'That SKU or barcode is already in use' : e.message;
+    res.status(400).json({ error: friendly });
   }
 });
 
-router.put('/:id', requireRole('admin', 'manager'), async (req, res) => {
+router.put('/:id', requireRole('admin', 'manager'), productValidators, handleValidation, async (req, res) => {
   const product = await Product.findByPk(req.params.id);
   if (!product) return res.status(404).json({ error: 'Product not found' });
-  await product.update(req.body);
-  res.json(product);
+  try {
+    await product.update(req.body);
+    res.json(product);
+  } catch (e) {
+    const friendly = e.name === 'SequelizeUniqueConstraintError' ? 'That SKU or barcode is already in use' : e.message;
+    res.status(400).json({ error: friendly });
+  }
 });
 
 router.delete('/:id', requireRole('admin', 'manager'), async (req, res) => {

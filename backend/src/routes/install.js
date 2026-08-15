@@ -81,6 +81,18 @@ router.post('/run', async (req, res) => {
   if (!db || !company || !currency || !admin) {
     return res.status(400).json({ error: 'Missing required installation data.' });
   }
+  if (!company.name || !company.name.trim()) {
+    return res.status(400).json({ error: 'Company name is required.' });
+  }
+  if (!admin.name || !admin.name.trim()) {
+    return res.status(400).json({ error: 'Administrator name is required.' });
+  }
+  if (!admin.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(admin.email)) {
+    return res.status(400).json({ error: 'Enter a valid administrator email address.' });
+  }
+  if (!admin.password || admin.password.length < 6) {
+    return res.status(400).json({ error: 'Administrator password must be at least 6 characters.' });
+  }
 
   try {
     // 1. Write .env so future boots (and this process going forward) use these creds

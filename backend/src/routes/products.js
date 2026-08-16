@@ -1,8 +1,7 @@
 const express = require('express');
-const { Op } = require('sequelize');
 const { body } = require('express-validator');
 const router = express.Router();
-const { sequelize, Product, Category, Supplier, StockMovement } = require('../models');
+const { Product, Category, Supplier, StockMovement } = require('../models');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const { handleValidation } = require('../middleware/validate');
 
@@ -23,23 +22,29 @@ router.get('/', async (req, res) => {
   try {
     const { q, category_id, low_stock } = req.query;
     const where = {};
-    if (q) {
-      // Explicit LOWER() makes this case-insensitive regardless of the
-      // database's default collation — MySQL and TiDB don't always agree on
-      // that default. Built as a raw, safely-escaped SQL fragment rather
-      // than Sequelize's fn()/col()/where() helpers — those repeatedly
-      // produced a form TiDB's parser rejected, even though the same code
-      // worked fine locally against MySQL. Plain SQL text is far less
-      // likely to hit a dialect-specific incompatibility like that.
-      const needle = sequelize.escape(`%${q.toLowerCase()}%`);
-      where[Op.and] = [
-        sequelize.literal(`(LOWER(name) LIKE ${needle} OR LOWER(sku) LIKE ${needle} OR LOWER(barcode) LIKE ${needle})`),
-      ];
-    }
     if (category_id) where.category_id = category_id;
-    const products = await Product.findAll({
+
+    // Fetch (optionally category-scoped) products, then filter by search
+    // text in plain JavaScript rather than asking the database to do
+    // case-insensitive matching. This deliberately avoids every SQL-dialect
+    // and collation quirk that comes with doing it at the query level —
+    // several attempts at that failed in ways that were hard to pin down
+    // across MySQL vs. TiDB. A store's catalog is small enough (dozens to a
+    // few hundred items) that filtering after the fetch costs nothing
+    // noticeable, and this way is trivially correct everywhere, always.
+    let products = await Product.findAll({
       where, include: [Category, Supplier], order: [['name', 'ASC']],
     });
+
+    if (q) {
+      const needle = q.toLowerCase();
+      products = products.filter(p =>
+        (p.name && p.name.toLowerCase().includes(needle)) ||
+        (p.sku && p.sku.toLowerCase().includes(needle)) ||
+        (p.barcode && p.barcode.toLowerCase().includes(needle))
+      );
+    }
+
     const list = low_stock === 'true'
       ? products.filter(p => Number(p.stock_qty) <= Number(p.reorder_level))
       : products;

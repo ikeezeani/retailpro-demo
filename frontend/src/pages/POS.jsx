@@ -44,12 +44,18 @@ export default function POS() {
   const loadProducts = async () => {
     const q = query; // capture the query this specific request is for
     latestQueryRef.current = q;
-    const { data } = await client.get('/products', { params: q ? { q } : {} });
-    // If the search box has moved on to a different query since this request
-    // was fired, its response is stale — discard it instead of letting it
-    // clobber whatever the more recent request already showed.
-    if (latestQueryRef.current === q) {
-      setProducts(data.filter(p => p.active));
+    try {
+      const { data } = await client.get('/products', { params: q ? { q } : {} });
+      // If the search box has moved on to a different query since this
+      // request was fired, its response is stale — discard it instead of
+      // letting it clobber whatever the more recent request already showed.
+      if (latestQueryRef.current === q) {
+        setProducts(data.filter(p => p.active));
+      }
+    } catch (e) {
+      if (latestQueryRef.current === q) {
+        showToast(e.response?.data?.error || 'Could not load products', true);
+      }
     }
   };
 

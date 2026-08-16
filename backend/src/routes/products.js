@@ -24,16 +24,16 @@ router.get('/', async (req, res) => {
     const { q, category_id, low_stock } = req.query;
     const where = {};
     if (q) {
-      // Explicit LOWER() on both sides makes this case-insensitive regardless
-      // of the database's default collation — MySQL and TiDB don't always
-      // agree on that default. Using the 3-argument form of sequelize.where
-      // (attribute, operator, value) here — it's the more universally
-      // compatible signature across MySQL/TiDB, versus the 2-arg object form.
-      const needle = `%${q.toLowerCase()}%`;
-      where[Op.or] = [
-        sequelize.where(sequelize.fn('LOWER', sequelize.col('name')), Op.like, needle),
-        sequelize.where(sequelize.fn('LOWER', sequelize.col('sku')), Op.like, needle),
-        sequelize.where(sequelize.fn('LOWER', sequelize.col('barcode')), Op.like, needle),
+      // Explicit LOWER() makes this case-insensitive regardless of the
+      // database's default collation — MySQL and TiDB don't always agree on
+      // that default. Built as a raw, safely-escaped SQL fragment rather
+      // than Sequelize's fn()/col()/where() helpers — those repeatedly
+      // produced a form TiDB's parser rejected, even though the same code
+      // worked fine locally against MySQL. Plain SQL text is far less
+      // likely to hit a dialect-specific incompatibility like that.
+      const needle = sequelize.escape(`%${q.toLowerCase()}%`);
+      where[Op.and] = [
+        sequelize.literal(`(LOWER(name) LIKE ${needle} OR LOWER(sku) LIKE ${needle} OR LOWER(barcode) LIKE ${needle})`),
       ];
     }
     if (category_id) where.category_id = category_id;
@@ -45,7 +45,7 @@ router.get('/', async (req, res) => {
       : products;
     res.json(list);
   } catch (e) {
-    console.error('Product search failed:', e.message);
+    console.error('Product search failed:', e.message, e.original?.sqlMessage || e.parent?.sqlMessage || '');
     res.status(500).json({ error: 'Search failed. Please try again.' });
   }
 });

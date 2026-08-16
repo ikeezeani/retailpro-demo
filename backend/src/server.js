@@ -13,6 +13,22 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 
+// Safety net: a single buggy async route handler (one that throws after an
+// `await`, e.g. a database error) should never be able to take the whole
+// API down for every user. Express 4 doesn't automatically catch those —
+// they surface as unhandled promise rejections, and modern Node's default
+// behavior is to crash the entire process on one of those. Log it and keep
+// running instead; the request that triggered it still fails, but every
+// other user stays unaffected. Individual routes should still use their own
+// try/catch for a proper error response — this is a last-resort backstop,
+// not a substitute for that.
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled promise rejection (server kept running):', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception (server kept running):', err);
+});
+
 const app = express();
 
 // Required on hosts that sit behind a reverse proxy (Render, Railway, most

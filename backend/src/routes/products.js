@@ -20,28 +20,34 @@ const productValidators = [
 
 // List / search products (used by POS product grid + inventory table)
 router.get('/', async (req, res) => {
-  const { q, category_id, low_stock } = req.query;
-  const where = {};
-  if (q) {
-    // Explicit LOWER() on both sides makes this case-insensitive regardless
-    // of the database's default collation — MySQL and TiDB don't always
-    // agree on that default, and relying on it silently broke search on one
-    // but not the other.
-    const needle = `%${q.toLowerCase()}%`;
-    where[Op.or] = [
-      sequelize.where(sequelize.fn('LOWER', sequelize.col('name')), { [Op.like]: needle }),
-      sequelize.where(sequelize.fn('LOWER', sequelize.col('sku')), { [Op.like]: needle }),
-      sequelize.where(sequelize.fn('LOWER', sequelize.col('barcode')), { [Op.like]: needle }),
-    ];
+  try {
+    const { q, category_id, low_stock } = req.query;
+    const where = {};
+    if (q) {
+      // Explicit LOWER() on both sides makes this case-insensitive regardless
+      // of the database's default collation — MySQL and TiDB don't always
+      // agree on that default. Using the 3-argument form of sequelize.where
+      // (attribute, operator, value) here — it's the more universally
+      // compatible signature across MySQL/TiDB, versus the 2-arg object form.
+      const needle = `%${q.toLowerCase()}%`;
+      where[Op.or] = [
+        sequelize.where(sequelize.fn('LOWER', sequelize.col('name')), Op.like, needle),
+        sequelize.where(sequelize.fn('LOWER', sequelize.col('sku')), Op.like, needle),
+        sequelize.where(sequelize.fn('LOWER', sequelize.col('barcode')), Op.like, needle),
+      ];
+    }
+    if (category_id) where.category_id = category_id;
+    const products = await Product.findAll({
+      where, include: [Category, Supplier], order: [['name', 'ASC']],
+    });
+    const list = low_stock === 'true'
+      ? products.filter(p => Number(p.stock_qty) <= Number(p.reorder_level))
+      : products;
+    res.json(list);
+  } catch (e) {
+    console.error('Product search failed:', e.message);
+    res.status(500).json({ error: 'Search failed. Please try again.' });
   }
-  if (category_id) where.category_id = category_id;
-  const products = await Product.findAll({
-    where, include: [Category, Supplier], order: [['name', 'ASC']],
-  });
-  const list = low_stock === 'true'
-    ? products.filter(p => Number(p.stock_qty) <= Number(p.reorder_level))
-    : products;
-  res.json(list);
 });
 
 // Exact barcode lookup — hit by the POS scanner on every scan for instant add-to-cart.
